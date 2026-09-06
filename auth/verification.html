@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Citizenship Verification | E-CHUNAB</title>
-  <meta name="description" content="Submit national citizenship credentials for election verification.">
+  <title>Voter Verification | E-CHUNAB</title>
+  <meta name="description" content="Submit national citizenship credentials and live camera photo for election verification.">
   <link rel="icon" type="image/svg+xml" href="../assets/icons/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,7 +25,7 @@
             </a>
           </div>
           <h1 class="auth-title">Voter Verification</h1>
-          <p class="auth-subtitle">Verify your identity with national citizenship records to unlock voting</p>
+          <p class="auth-subtitle">Verify your identity with citizenship records &amp; live camera photo</p>
         </div>
 
         <!-- Verification State Banner -->
@@ -33,7 +33,7 @@
           <div>
             <div id="status-display-title" style="font-weight: 700; font-size: 0.95rem;">Status: Verification Pending Review</div>
             <div id="status-display-desc" style="font-size: 0.825rem; margin-top: 4px;">
-              Your documents have been submitted and are undergoing review by the election commission.
+              Your documents and live camera photo have been submitted and are undergoing review by the election commission.
             </div>
           </div>
         </div>
@@ -65,9 +65,9 @@
             </div>
           </div>
 
-          <!-- Document Upload Dropzones -->
-          <div style="margin-top: 10px;">
-            <label class="form-label">Citizenship Document Images (Private Storage) <span class="required">*</span></label>
+          <!-- 1. Document Upload Dropzones (Citizenship Card) -->
+          <div style="margin-top: 14px;">
+            <label class="form-label">1. Citizenship Document Images (Private Storage) <span class="required">*</span></label>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px;">
               <!-- Front Side -->
@@ -90,12 +90,126 @@
                 </div>
               </div>
             </div>
-            <div class="form-hint" style="margin-top: 8px;">Files are stored securely in private encrypted storage. Only election officials can audit.</div>
+          </div>
+
+          <!-- 2. Live Camera Photo Capture Section -->
+          <div style="margin-top: 24px; padding: 20px; background: var(--gray-50); border: 1px dashed var(--gray-300); border-radius: var(--radius-md);">
+            <div class="flex-between" style="margin-bottom: 12px;">
+              <label class="form-label" style="margin: 0; font-weight: 700;">2. Mandatory Live Camera Photo <span class="required">*</span></label>
+              <span id="live-photo-status-badge" class="badge badge-draft">Photo Required</span>
+            </div>
+
+            <!-- Video & Photo Canvas Container -->
+            <div id="camera-container" style="position: relative; width: 100%; max-width: 380px; margin: 0 auto; overflow: hidden; border-radius: var(--radius-md); background: #111; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center;">
+              
+              <!-- Placeholder State -->
+              <div id="camera-placeholder" style="text-align: center; color: var(--gray-400); padding: 20px;">
+                <div style="font-size: 2.5rem; margin-bottom: 8px;">📷</div>
+                <p style="font-size: 0.85rem; margin: 0; color: #9ca3af;">Click "Enable Camera" to capture your verification photo.</p>
+              </div>
+
+              <!-- Live Video Stream -->
+              <video id="camera-video" autoplay playsinline style="display: none; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+
+              <!-- Face Alignment Overlay Guide -->
+              <div id="camera-overlay" style="display: none; position: absolute; inset: 0; pointer-events: none; border: 2px dashed rgba(255, 255, 255, 0.7); border-radius: 50%; margin: 16px auto; width: 200px; height: 240px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.35);">
+                <div style="position: absolute; bottom: 12px; width: 100%; text-align: center; font-size: 0.75rem; color: #fff; background: rgba(0,0,0,0.7); padding: 4px; border-radius: 12px;">
+                  Position face inside frame
+                </div>
+              </div>
+
+              <!-- Captured Image Preview -->
+              <img id="camera-preview-img" style="display: none; width: 100%; height: 100%; object-fit: cover;" alt="Captured Live Verification Photo">
+              
+              <!-- Offscreen Canvas for capture -->
+              <canvas id="camera-canvas" style="display: none;"></canvas>
+            </div>
+
+            <!-- Camera Controls Bar -->
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 14px; flex-wrap: wrap;">
+              <button type="button" id="btn-enable-camera" class="btn btn-outline btn-sm">📷 Enable Camera</button>
+              <button type="button" id="btn-capture-photo" class="btn btn-primary btn-sm" style="display: none; background: var(--accent-red-600); border-color: var(--accent-red-600);">📸 Take Live Photo</button>
+              <button type="button" id="btn-retake-photo" class="btn btn-outline btn-sm" style="display: none;">🔄 Retake Photo</button>
+              <button type="button" id="btn-use-photo" class="btn btn-success btn-sm" style="display: none; background: var(--success-700); border-color: var(--success-700);">✓ Use This Photo</button>
+            </div>
+            
+            <div id="camera-error-msg" style="display: none; margin-top: 10px; padding: 10px; background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.3); border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--accent-red-600); text-align: center;">
+            </div>
+            <div class="form-hint" style="margin-top: 10px; text-align: center;">Must be a live camera capture. Stored securely in private encrypted storage for commission inspection only.</div>
+          </div>
+
+          <!-- 3. Camera-Based Fingerprint Verification (Prototype) -->
+          <div style="margin-top: 24px; padding: 20px; background: var(--gray-50); border: 1px dashed var(--gray-300); border-radius: var(--radius-md);">
+            <div class="flex-between" style="margin-bottom: 8px;">
+              <label class="form-label" style="margin: 0; font-weight: 700;">3. Camera-Based Fingerprint Verification — Prototype <span class="required">*</span></label>
+              <span id="fingerprint-status-badge" class="badge badge-draft">Fingerprint Required</span>
+            </div>
+            <div style="font-size: 0.78rem; color: var(--gray-600); margin-bottom: 14px;">
+              Capture the fingerprint matching the reference image on your citizenship certificate using your device camera under bright, even lighting.
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px;">
+              <!-- Reference Fingerprint Selector/Crop -->
+              <div style="border: 1px solid var(--gray-200); padding: 12px; border-radius: var(--radius-sm); background: #fff; text-align: center;">
+                <div style="font-weight: 600; font-size: 0.8rem; margin-bottom: 6px; color: var(--gray-800);">A. Reference Fingerprint (Card)</div>
+                <div id="ref-fp-dropzone" onclick="document.getElementById('file-ref-fp').click()" style="border: 2px dashed var(--gray-300); border-radius: 6px; padding: 10px; cursor: pointer; min-height: 100px; display: flex; align-items: center; justify-content: center;">
+                  <img id="preview-ref-fp" style="max-height: 100px; display: none; margin: 0 auto; border-radius: 4px; object-fit: contain;" alt="Reference Fingerprint">
+                  <div id="placeholder-ref-fp" style="color: var(--gray-500); font-size: 0.75rem;">
+                    <div style="font-size: 1.5rem; margin-bottom: 4px;">👆</div>
+                    Click to select/upload fingerprint reference image from card
+                  </div>
+                </div>
+                <input type="file" id="file-ref-fp" accept="image/*" style="display: none;">
+                <button type="button" id="btn-crop-citiz-fp" class="btn btn-xs btn-outline" style="margin-top: 8px; font-size: 0.725rem; width: 100%;" onclick="cropFingerprintFromCitizenship()">Crop from Citizenship Card Front</button>
+              </div>
+
+              <!-- Live Camera Fingerprint Capture -->
+              <div style="border: 1px solid var(--gray-200); padding: 12px; border-radius: var(--radius-sm); background: #fff; text-align: center;">
+                <div style="font-weight: 600; font-size: 0.8rem; margin-bottom: 6px; color: var(--gray-800);">B. Live Fingerprint Capture</div>
+                <div id="live-fp-container" style="position: relative; border: 2px dashed var(--gray-300); border-radius: 6px; height: 110px; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center;">
+                  <div id="fp-camera-placeholder" style="color: #9ca3af; font-size: 0.75rem; padding: 6px;">
+                    <div style="font-size: 1.5rem; margin-bottom: 2px;">📷</div>
+                    Click "Enable Fingerprint Camera"
+                  </div>
+                  <video id="fp-camera-video" autoplay playsinline style="display: none; width: 100%; height: 100%; object-fit: cover;"></video>
+                  
+                  <!-- Fingerprint Alignment Overlay -->
+                  <div id="fp-camera-overlay" style="display: none; position: absolute; inset: 0; pointer-events: none; border: 2px dashed #22c55e; border-radius: 8px; margin: 8px auto; width: 80px; height: 90px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);">
+                    <div style="position: absolute; bottom: 2px; width: 100%; text-align: center; font-size: 0.6rem; color: #fff; background: rgba(0,0,0,0.7); padding: 2px 0;">
+                      Align Finger
+                    </div>
+                  </div>
+                  
+                  <img id="fp-preview-img" style="display: none; width: 100%; height: 100%; object-fit: cover;" alt="Captured Live Fingerprint">
+                  <canvas id="fp-canvas" style="display: none;"></canvas>
+                </div>
+
+                <div style="display: flex; gap: 4px; justify-content: center; margin-top: 8px; flex-wrap: wrap;">
+                  <button type="button" id="btn-enable-fp-camera" class="btn btn-xs btn-outline" style="font-size: 0.725rem;">📷 Enable Camera</button>
+                  <button type="button" id="btn-toggle-camera-facing" class="btn btn-xs btn-outline" style="display: none; font-size: 0.725rem;" title="Switch Camera">🔄 Switch</button>
+                  <button type="button" id="btn-capture-fp" class="btn btn-xs btn-primary" style="display: none; background: var(--accent-red-600); border-color: var(--accent-red-600); font-size: 0.725rem;">📸 Capture</button>
+                  <button type="button" id="btn-retake-fp" class="btn btn-xs btn-outline" style="display: none; font-size: 0.725rem;">🔄 Retake</button>
+                  <button type="button" id="btn-confirm-fp" class="btn btn-xs btn-success" style="display: none; background: var(--success-700); font-size: 0.725rem;">✓ Confirm</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="fp-camera-error-msg" style="display: none; margin-top: 8px; padding: 8px; background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.3); border-radius: var(--radius-sm); font-size: 0.78rem; color: var(--accent-red-600); text-align: center;"></div>
+
+            <!-- Biometric Match Processing Status Banner -->
+            <div id="biometric-match-box" style="margin-top: 12px; padding: 10px 14px; background: #ffffff; border-radius: var(--radius-sm); border: 1px solid var(--gray-200); font-size: 0.8rem; text-align: center;">
+              <div style="font-weight: 700; color: var(--gray-800);" id="biometric-status-title">Biometric Status: Pending Reference &amp; Live Fingerprint</div>
+              <div style="font-size: 0.75rem; color: var(--gray-600); margin-top: 2px;" id="biometric-status-desc">Provide reference and live fingerprint images to run computer vision minutiae feature matching.</div>
+            </div>
+
+            <div class="form-hint" style="margin-top: 8px; text-align: center;">
+              Hold finger steady ~5cm from camera under bright lighting. Prototype feature — admin review remains mandatory.
+            </div>
           </div>
 
           <div class="form-group" style="margin-top: 28px;">
             <button type="submit" id="btn-submit-verification" class="btn btn-primary" style="width: 100%;">
-              Submit Documents for Verification
+              Submit Identity Documents, Live Photo &amp; Fingerprint for Verification
             </button>
           </div>
         </form>
@@ -117,6 +231,24 @@
     let existingVoterRecord = null;
     let fileFrontSelected = null;
     let fileBackSelected = null;
+    
+    // Live Face Camera state
+    let activeStream = null;
+    let capturedBlob = null;
+    let isPhotoConfirmed = false;
+
+    // Camera-Based Fingerprint state
+    let fpActiveStream = null;
+    let fpFacingMode = 'environment';
+    let refFpBlob = null;
+    let refFpBase64 = null;
+    let liveFpBlob = null;
+    let liveFpBase64 = null;
+    let isFpConfirmed = false;
+    let fpMatchStatus = 'pending';
+    let fpMatchScore = null;
+
+    const BIOMETRIC_API_URL = "http://127.0.0.1:8000/api/verify-fingerprint";
 
     document.addEventListener('DOMContentLoaded', async () => {
       const client = window.getSupabaseClient ? window.getSupabaseClient() : null;
@@ -133,7 +265,7 @@
       }
       currentUser = session.user;
 
-      // Handle file input changes for front and back
+      // Handle file input changes for front and back citizenship cards
       const frontInput = document.getElementById('file-front');
       frontInput.addEventListener('change', (e) => {
         if (e.target.files && e.target.files[0]) {
@@ -154,9 +286,490 @@
         }
       });
 
+      // Handle file input change for Reference Fingerprint
+      const refFpInput = document.getElementById('file-ref-fp');
+      if (refFpInput) {
+        refFpInput.addEventListener('change', (e) => {
+          if (e.target.files && e.target.files[0]) {
+            setReferenceFingerprint(e.target.files[0]);
+          }
+        });
+      }
+
+      // Setup Camera Control Handlers for Live Face & Live Fingerprint
+      setupCameraHandlers();
+      setupFingerprintHandlers();
+
       // Load existing verification record if any
       await loadExistingVerification(client, currentUser.id);
     });
+
+    function setupCameraHandlers() {
+      const enableBtn = document.getElementById('btn-enable-camera');
+      const captureBtn = document.getElementById('btn-capture-photo');
+      const retakeBtn = document.getElementById('btn-retake-photo');
+      const useBtn = document.getElementById('btn-use-photo');
+
+      if (enableBtn) enableBtn.addEventListener('click', startCamera);
+      if (captureBtn) captureBtn.addEventListener('click', capturePhoto);
+      if (retakeBtn) retakeBtn.addEventListener('click', startCamera);
+      if (useBtn) useBtn.addEventListener('click', confirmPhoto);
+
+      // Clean stop on page leave
+      window.addEventListener('beforeunload', stopAllCameras);
+      window.addEventListener('pagehide', stopAllCameras);
+    }
+
+    function setupFingerprintHandlers() {
+      const enableBtn = document.getElementById('btn-enable-fp-camera');
+      const toggleBtn = document.getElementById('btn-toggle-camera-facing');
+      const captureBtn = document.getElementById('btn-capture-fp');
+      const retakeBtn = document.getElementById('btn-retake-fp');
+      const confirmBtn = document.getElementById('btn-confirm-fp');
+
+      if (enableBtn) enableBtn.addEventListener('click', startFpCamera);
+      if (toggleBtn) toggleBtn.addEventListener('click', toggleFpCameraFacing);
+      if (captureBtn) captureBtn.addEventListener('click', captureFpPhoto);
+      if (retakeBtn) retakeBtn.addEventListener('click', startFpCamera);
+      if (confirmBtn) confirmBtn.addEventListener('click', confirmFpPhoto);
+    }
+
+    function stopAllCameras() {
+      stopCamera();
+      stopFpCamera();
+    }
+
+    // --- Face Camera Implementation ---
+    async function startCamera() {
+      stopCamera();
+      isPhotoConfirmed = false;
+      capturedBlob = null;
+
+      const errorEl = document.getElementById('camera-error-msg');
+      if (errorEl) errorEl.style.display = 'none';
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showCameraError('Camera access is not supported by your browser or current connection context.');
+        return;
+      }
+
+      try {
+        activeStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
+        });
+
+        const video = document.getElementById('camera-video');
+        const placeholder = document.getElementById('camera-placeholder');
+        const overlay = document.getElementById('camera-overlay');
+        const previewImg = document.getElementById('camera-preview-img');
+        const enableBtn = document.getElementById('btn-enable-camera');
+        const captureBtn = document.getElementById('btn-capture-photo');
+        const retakeBtn = document.getElementById('btn-retake-photo');
+        const useBtn = document.getElementById('btn-use-photo');
+
+        video.srcObject = activeStream;
+        video.style.display = 'block';
+        placeholder.style.display = 'none';
+        overlay.style.display = 'block';
+        previewImg.style.display = 'none';
+
+        enableBtn.style.display = 'none';
+        captureBtn.style.display = 'inline-flex';
+        retakeBtn.style.display = 'none';
+        useBtn.style.display = 'none';
+
+        document.getElementById('live-photo-status-badge').className = 'badge badge-pending';
+        document.getElementById('live-photo-status-badge').textContent = 'Camera Active';
+
+      } catch (err) {
+        console.error('[Camera Access Error]', err);
+        let msg = 'Camera access is required to complete voter verification.';
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          msg = 'Camera access was denied. Please allow camera permission in your browser and try again.';
+        } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+          msg = 'No camera device found on your system.';
+        } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+          msg = 'Camera is currently in use by another application.';
+        }
+        showCameraError(msg);
+      }
+    }
+
+    function stopCamera() {
+      if (activeStream) {
+        activeStream.getTracks().forEach(track => track.stop());
+        activeStream = null;
+      }
+    }
+
+    function showCameraError(msg) {
+      const errorEl = document.getElementById('camera-error-msg');
+      const enableBtn = document.getElementById('btn-enable-camera');
+      const captureBtn = document.getElementById('btn-capture-photo');
+
+      if (errorEl) {
+        errorEl.textContent = msg;
+        errorEl.style.display = 'block';
+      }
+      if (enableBtn) {
+        enableBtn.style.display = 'inline-flex';
+        enableBtn.textContent = '🔄 Try Camera Again';
+      }
+      if (captureBtn) captureBtn.style.display = 'none';
+    }
+
+    function capturePhoto() {
+      const video = document.getElementById('camera-video');
+      const canvas = document.getElementById('camera-canvas');
+      const previewImg = document.getElementById('camera-preview-img');
+      const overlay = document.getElementById('camera-overlay');
+      const captureBtn = document.getElementById('btn-capture-photo');
+      const retakeBtn = document.getElementById('btn-retake-photo');
+      const useBtn = document.getElementById('btn-use-photo');
+
+      if (!video || !video.videoWidth) {
+        showCameraError('Unable to capture frame from video stream.');
+        return;
+      }
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      
+      // Mirror horizontally for front face preview
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob((blob) => {
+        if (!blob || blob.size === 0) {
+          showCameraError('Captured photo was empty. Please try again.');
+          return;
+        }
+
+        if (blob.size > 5 * 1024 * 1024) {
+          showCameraError('Captured image size exceeds 5MB limit. Please retake.');
+          return;
+        }
+
+        capturedBlob = blob;
+        const previewUrl = URL.createObjectURL(blob);
+        previewImg.src = previewUrl;
+        previewImg.style.display = 'block';
+
+        video.style.display = 'none';
+        overlay.style.display = 'none';
+        stopCamera();
+
+        captureBtn.style.display = 'none';
+        retakeBtn.style.display = 'inline-flex';
+        useBtn.style.display = 'inline-flex';
+
+        document.getElementById('live-photo-status-badge').className = 'badge badge-pending';
+        document.getElementById('live-photo-status-badge').textContent = 'Photo Captured';
+
+      }, 'image/jpeg', 0.85);
+    }
+
+    function confirmPhoto() {
+      if (!capturedBlob) return;
+
+      isPhotoConfirmed = true;
+      const retakeBtn = document.getElementById('btn-retake-photo');
+      const useBtn = document.getElementById('btn-use-photo');
+      const badge = document.getElementById('live-photo-status-badge');
+
+      if (useBtn) {
+        useBtn.textContent = '✓ Photo Confirmed';
+        useBtn.disabled = true;
+      }
+      if (retakeBtn) retakeBtn.textContent = 'Change Photo';
+      if (badge) {
+        badge.className = 'badge badge-approved';
+        badge.textContent = 'Photo Ready ✓';
+      }
+
+      if (window.showToast) {
+        showToast('success', 'Photo Selected', 'Live camera photo captured and confirmed!');
+      }
+    }
+
+    // --- Fingerprint Camera & Reference Processing Implementation ---
+
+    function setReferenceFingerprint(file) {
+      refFpBlob = file;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        refFpBase64 = e.target.result;
+        const previewImg = document.getElementById('preview-ref-fp');
+        const placeholder = document.getElementById('placeholder-ref-fp');
+        previewImg.src = refFpBase64;
+        previewImg.style.display = 'block';
+        placeholder.style.display = 'none';
+
+        triggerBiometricMatchingIfReady();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function cropFingerprintFromCitizenship() {
+      if (!fileFrontSelected) {
+        if (window.showToast) showToast('warning', 'Card Image Required', 'Please select a Citizenship Front image in Step 1 first.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          // Crop fingerprint box (typically bottom-right quadrant of citizenship front card)
+          const cropW = Math.floor(img.width * 0.35);
+          const cropH = Math.floor(img.height * 0.45);
+          const cropX = Math.floor(img.width * 0.60);
+          const cropY = Math.floor(img.height * 0.45);
+
+          canvas.width = cropW;
+          canvas.height = cropH;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+          canvas.toBlob((blob) => {
+            if (blob) {
+              setReferenceFingerprint(new File([blob], "citizenship_ref_fingerprint.jpg", { type: "image/jpeg" }));
+              if (window.showToast) showToast('info', 'Cropped', 'Cropped fingerprint region from Citizenship Front card!');
+            }
+          }, 'image/jpeg', 0.90);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(fileFrontSelected);
+    }
+
+    async function startFpCamera() {
+      stopFpCamera();
+      isFpConfirmed = false;
+      liveFpBlob = null;
+      liveFpBase64 = null;
+
+      const errorEl = document.getElementById('fp-camera-error-msg');
+      if (errorEl) errorEl.style.display = 'none';
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showFpCameraError('Fingerprint camera capture not supported by browser.');
+        return;
+      }
+
+      try {
+        fpActiveStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: fpFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
+        });
+
+        const video = document.getElementById('fp-camera-video');
+        const placeholder = document.getElementById('fp-camera-placeholder');
+        const overlay = document.getElementById('fp-camera-overlay');
+        const previewImg = document.getElementById('fp-preview-img');
+        const enableBtn = document.getElementById('btn-enable-fp-camera');
+        const toggleBtn = document.getElementById('btn-toggle-camera-facing');
+        const captureBtn = document.getElementById('btn-capture-fp');
+        const retakeBtn = document.getElementById('btn-retake-fp');
+        const confirmBtn = document.getElementById('btn-confirm-fp');
+
+        video.srcObject = fpActiveStream;
+        video.style.display = 'block';
+        placeholder.style.display = 'none';
+        overlay.style.display = 'block';
+        previewImg.style.display = 'none';
+
+        enableBtn.style.display = 'none';
+        toggleBtn.style.display = 'inline-flex';
+        captureBtn.style.display = 'inline-flex';
+        retakeBtn.style.display = 'none';
+        confirmBtn.style.display = 'none';
+
+        document.getElementById('fingerprint-status-badge').className = 'badge badge-pending';
+        document.getElementById('fingerprint-status-badge').textContent = 'FP Camera Active';
+
+      } catch (err) {
+        console.error('[Fingerprint Camera Error]', err);
+        let msg = 'Camera access is required for fingerprint capture.';
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          msg = 'Camera access was denied. Please grant camera permission.';
+        } else if (err.name === 'NotReadableError') {
+          msg = 'Camera is currently in use by another app.';
+        }
+        showFpCameraError(msg);
+      }
+    }
+
+    function toggleFpCameraFacing() {
+      fpFacingMode = (fpFacingMode === 'environment') ? 'user' : 'environment';
+      startFpCamera();
+    }
+
+    function stopFpCamera() {
+      if (fpActiveStream) {
+        fpActiveStream.getTracks().forEach(track => track.stop());
+        fpActiveStream = null;
+      }
+    }
+
+    function showFpCameraError(msg) {
+      const errorEl = document.getElementById('fp-camera-error-msg');
+      const enableBtn = document.getElementById('btn-enable-fp-camera');
+      if (errorEl) {
+        errorEl.textContent = msg;
+        errorEl.style.display = 'block';
+      }
+      if (enableBtn) {
+        enableBtn.style.display = 'inline-flex';
+        enableBtn.textContent = '🔄 Retry Fingerprint Camera';
+      }
+    }
+
+    function captureFpPhoto() {
+      const video = document.getElementById('fp-camera-video');
+      const canvas = document.getElementById('fp-canvas');
+      const previewImg = document.getElementById('fp-preview-img');
+      const overlay = document.getElementById('fp-camera-overlay');
+      const captureBtn = document.getElementById('btn-capture-fp');
+      const retakeBtn = document.getElementById('btn-retake-fp');
+      const confirmBtn = document.getElementById('btn-confirm-fp');
+
+      if (!video || !video.videoWidth) {
+        showFpCameraError('Unable to capture fingerprint frame.');
+        return;
+      }
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      liveFpBase64 = canvas.toDataURL('image/jpeg', 0.90);
+      canvas.toBlob((blob) => {
+        if (!blob || blob.size === 0) {
+          showFpCameraError('Fingerprint snapshot empty. Retake.');
+          return;
+        }
+
+        liveFpBlob = blob;
+        previewImg.src = URL.createObjectURL(blob);
+        previewImg.style.display = 'block';
+
+        video.style.display = 'none';
+        overlay.style.display = 'none';
+        stopFpCamera();
+
+        captureBtn.style.display = 'none';
+        retakeBtn.style.display = 'inline-flex';
+        confirmBtn.style.display = 'inline-flex';
+
+        document.getElementById('fingerprint-status-badge').className = 'badge badge-pending';
+        document.getElementById('fingerprint-status-badge').textContent = 'FP Captured';
+
+      }, 'image/jpeg', 0.90);
+    }
+
+    function confirmFpPhoto() {
+      if (!liveFpBlob || !liveFpBase64) return;
+
+      isFpConfirmed = true;
+      const confirmBtn = document.getElementById('btn-confirm-fp');
+      const retakeBtn = document.getElementById('btn-retake-fp');
+      const badge = document.getElementById('fingerprint-status-badge');
+
+      if (confirmBtn) {
+        confirmBtn.textContent = '✓ FP Confirmed';
+        confirmBtn.disabled = true;
+      }
+      if (retakeBtn) retakeBtn.textContent = 'Change FP';
+      if (badge) {
+        badge.className = 'badge badge-approved';
+        badge.textContent = 'Fingerprint Ready ✓';
+      }
+
+      triggerBiometricMatchingIfReady();
+    }
+
+    async function triggerBiometricMatchingIfReady() {
+      if (!refFpBase64 || !liveFpBase64) return;
+
+      const titleEl = document.getElementById('biometric-status-title');
+      const descEl = document.getElementById('biometric-status-desc');
+      const badge = document.getElementById('fingerprint-status-badge');
+
+      if (titleEl) titleEl.textContent = 'Biometric Status: Processing Computer Vision Matching...';
+      if (descEl) descEl.textContent = 'Extracting SIFT minutiae keypoints and running RANSAC spatial geometric verification...';
+      if (badge) {
+        badge.className = 'badge badge-pending';
+        badge.textContent = 'Processing Biometrics...';
+      }
+
+      try {
+        const response = await fetch(BIOMETRIC_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reference_image: refFpBase64,
+            live_image: liveFpBase64
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Service returned HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        fpMatchStatus = data.status || 'unable_to_verify';
+        fpMatchScore = data.score !== undefined ? data.score : null;
+
+        if (fpMatchStatus === 'matched') {
+          titleEl.textContent = `Fingerprint Verification Result: MATCH ✓ (Inlier Score: ${data.score})`;
+          titleEl.style.color = 'var(--success-700)';
+          descEl.textContent = data.details || 'Biometric matcher verified consistent minutiae ridge keypoint correspondence.';
+          if (badge) {
+            badge.className = 'badge badge-approved';
+            badge.textContent = 'Match: MATCH ✓';
+          }
+        } else if (fpMatchStatus === 'not_matched') {
+          titleEl.textContent = `Fingerprint Verification Result: NO MATCH ❌ (Inlier Score: ${data.score})`;
+          titleEl.style.color = 'var(--accent-red-600)';
+          descEl.textContent = data.details || 'Fingerprint minutiae patterns do not correspond. Admin review required.';
+          if (badge) {
+            badge.className = 'badge badge-rejected';
+            badge.textContent = 'Match: NO MATCH ❌';
+          }
+        } else {
+          titleEl.textContent = `Fingerprint Verification Result: UNABLE TO VERIFY ⚠️`;
+          titleEl.style.color = 'var(--warning-700)';
+          descEl.textContent = data.details || 'Image quality or minutiae clarity insufficient. Application will undergo admin review.';
+          if (badge) {
+            badge.className = 'badge badge-pending';
+            badge.textContent = 'Unable to Verify ⚠️';
+          }
+        }
+
+      } catch (err) {
+        console.warn('[Biometric API Offline or Failed]', err);
+        fpMatchStatus = 'requires_review';
+        fpMatchScore = null;
+
+        if (titleEl) {
+          titleEl.textContent = 'Camera-Based Fingerprint Verification — Prototype: Service Offline';
+          titleEl.style.color = 'var(--gray-800)';
+        }
+        if (descEl) {
+          descEl.textContent = 'Biometric processing API is unavailable. Fingerprint images captured & queued for mandatory admin visual review.';
+        }
+        if (badge) {
+          badge.className = 'badge badge-pending';
+          badge.textContent = 'Pending Admin Review ⏳';
+        }
+      }
+    }
 
     async function loadExistingVerification(client, userId) {
       try {
@@ -181,12 +794,48 @@
         const statusDesc = document.getElementById('status-display-desc');
         const rejectionBox = document.getElementById('rejection-box');
         const submitBtn = document.getElementById('btn-submit-verification');
+        const liveBadge = document.getElementById('live-photo-status-badge');
+        const fpBadge = document.getElementById('fingerprint-status-badge');
+
+        if (data.live_photo_path) {
+          if (liveBadge) {
+            liveBadge.className = 'badge badge-approved';
+            liveBadge.textContent = 'Live Photo Uploaded ✓';
+          }
+          try {
+            const { data: photoData } = await client.storage
+              .from('voter-live-photos')
+              .createSignedUrl(data.live_photo_path, 3600);
+
+            if (photoData?.signedUrl) {
+              const previewImg = document.getElementById('camera-preview-img');
+              const placeholder = document.getElementById('camera-placeholder');
+              previewImg.src = photoData.signedUrl;
+              previewImg.style.display = 'block';
+              placeholder.style.display = 'none';
+            }
+          } catch (e) {
+            console.warn('[Signed URL Error]', e);
+          }
+        }
+
+        if (data.fingerprint_live_path && fpBadge) {
+          fpBadge.className = 'badge badge-approved';
+          fpBadge.textContent = `FP Status: ${(data.fingerprint_match_status || 'Submitted').toUpperCase()}`;
+        }
+
+        if (data.citizenship_front && data.citizenship_back) {
+          document.getElementById('label-front').textContent = 'Citizenship Front (Uploaded)';
+          document.getElementById('label-back').textContent = 'Citizenship Back (Uploaded)';
+          document.getElementById('dropzone-front').style.borderColor = 'var(--success-700)';
+          document.getElementById('dropzone-back').style.borderColor = 'var(--success-700)';
+        }
 
         if (data.verification_status === 'approved') {
           statusBanner.className = 'verification-status-banner approved';
           statusBanner.style.display = 'flex';
           statusTitle.textContent = 'Status: Verification Approved ✓';
-          statusDesc.textContent = 'Your citizenship verification has been approved by the election commission. You are fully eligible to vote in active elections.';
+          statusDesc.textContent = 'Your credentials, live camera photo & fingerprint have been approved by the election commission. You are eligible to vote.';
           submitBtn.style.display = 'none';
           document.getElementById('verif-citizenship-no').disabled = true;
           document.getElementById('verif-dob').disabled = true;
@@ -195,12 +844,12 @@
           statusBanner.className = 'verification-status-banner pending';
           statusBanner.style.display = 'flex';
           statusTitle.textContent = 'Status: Verification Pending Review ⏳';
-          statusDesc.textContent = 'Your documents have been submitted and are undergoing review by election officials. Please check back shortly.';
-          submitBtn.textContent = 'Update Submitted Documents';
+          statusDesc.textContent = 'Your identity documents, live camera photo & fingerprint have been submitted and are undergoing review by election officials.';
+          submitBtn.textContent = 'Update Submitted Verification Credentials';
         } else if (data.verification_status === 'rejected') {
           rejectionBox.style.display = 'flex';
-          document.getElementById('rejection-reason-text').textContent = `Reason: ${data.rejection_reason || 'Document does not meet requirements.'}`;
-          submitBtn.textContent = 'Resubmit Documents for Review';
+          document.getElementById('rejection-reason-text').textContent = `Reason: ${data.rejection_reason || 'Document or biometric photo does not meet requirements.'}`;
+          submitBtn.textContent = 'Resubmit Credentials & Biometrics for Review';
         }
       } catch (err) {
         console.error('[Load Verification Error]', err);
@@ -228,22 +877,44 @@
         return;
       }
 
-      // Files validation
+      // Validation 1: Citizenship Card Required
       let frontPath = existingVoterRecord?.citizenship_front;
       let backPath = existingVoterRecord?.citizenship_back;
 
       if (!frontPath && !fileFrontSelected) {
-        if (window.showToast) showToast('warning', 'Document Required', 'Please select your citizenship front card image.');
+        if (window.showToast) showToast('warning', 'Citizenship Card Required', 'Please upload your citizenship front card image.');
         return;
       }
       if (!backPath && !fileBackSelected) {
-        if (window.showToast) showToast('warning', 'Document Required', 'Please select your citizenship back card image.');
+        if (window.showToast) showToast('warning', 'Citizenship Card Required', 'Please upload your citizenship back card image.');
+        return;
+      }
+
+      // Validation 2: Mandatory Live Camera Photo Required
+      let livePhotoPath = existingVoterRecord?.live_photo_path;
+
+      if (!livePhotoPath && !capturedBlob) {
+        if (window.showToast) showToast('warning', 'Live Photo Required', 'Please take a live camera photo using your camera.');
+        return;
+      }
+
+      // Validation 3: Mandatory Camera-Based Fingerprint Images Required
+      let refFpPath = existingVoterRecord?.fingerprint_reference_path;
+      let liveFpPath = existingVoterRecord?.fingerprint_live_path;
+
+      if (!refFpPath && !refFpBlob) {
+        if (window.showToast) showToast('warning', 'Fingerprint Required', 'Please provide or crop a reference fingerprint image from your card.');
+        return;
+      }
+
+      if (!liveFpPath && !liveFpBlob) {
+        if (window.showToast) showToast('warning', 'Fingerprint Required', 'Please capture a live fingerprint using your camera.');
         return;
       }
 
       submitBtn.disabled = true;
       const originalText = submitBtn.textContent;
-      submitBtn.textContent = 'Uploading & Encrypting...';
+      submitBtn.textContent = 'Uploading Identity Documents & Biometrics...';
 
       try {
         const timestamp = Date.now();
@@ -272,42 +943,76 @@
           backPath = filePath;
         }
 
-        submitBtn.textContent = 'Saving Record...';
+        // 3. Upload Mandatory Live Photo if newly captured
+        if (capturedBlob) {
+          const filePath = `${currentUser.id}/live_photo_${timestamp}.jpg`;
+          const { error: liveUpErr } = await client.storage
+            .from('voter-live-photos')
+            .upload(filePath, capturedBlob, { contentType: 'image/jpeg', upsert: true });
 
-        // 3. Upsert voter record in public.voters
+          if (liveUpErr) throw liveUpErr;
+          livePhotoPath = filePath;
+        }
+
+        // 4. Upload Reference Fingerprint Image to voter-fingerprints
+        if (refFpBlob) {
+          const filePath = `${currentUser.id}/reference/ref_fingerprint_${timestamp}.jpg`;
+          const { error: refFpErr } = await client.storage
+            .from('voter-fingerprints')
+            .upload(filePath, refFpBlob, { contentType: 'image/jpeg', upsert: true });
+
+          if (refFpErr) throw refFpErr;
+          refFpPath = filePath;
+        }
+
+        // 5. Upload Live Camera Fingerprint Image to voter-fingerprints
+        if (liveFpBlob) {
+          const filePath = `${currentUser.id}/live/live_fingerprint_${timestamp}.jpg`;
+          const { error: liveFpErr } = await client.storage
+            .from('voter-fingerprints')
+            .upload(filePath, liveFpBlob, { contentType: 'image/jpeg', upsert: true });
+
+          if (liveFpErr) throw liveFpErr;
+          liveFpPath = filePath;
+        }
+
+        submitBtn.textContent = 'Saving Verification Record...';
+
+        // 6. Upsert voter record in public.voters
+        const voterData = {
+          citizenship_number: citizNo,
+          date_of_birth: dob,
+          address: address,
+          citizenship_front: frontPath,
+          citizenship_back: backPath,
+          live_photo_path: livePhotoPath,
+          fingerprint_reference_path: refFpPath,
+          fingerprint_live_path: liveFpPath,
+          fingerprint_match_status: fpMatchStatus,
+          fingerprint_match_score: fpMatchScore,
+          fingerprint_verified_at: new Date().toISOString(),
+          verification_status: 'pending',
+          rejection_reason: null
+        };
+
         if (existingVoterRecord) {
           const { error: updErr } = await client
             .from('voters')
-            .update({
-              citizenship_number: citizNo,
-              date_of_birth: dob,
-              address: address,
-              citizenship_front: frontPath,
-              citizenship_back: backPath,
-              verification_status: 'pending',
-              rejection_reason: null
-            })
+            .update(voterData)
             .eq('user_id', currentUser.id);
 
           if (updErr) throw updErr;
         } else {
+          voterData.user_id = currentUser.id;
           const { error: insErr } = await client
             .from('voters')
-            .insert({
-              user_id: currentUser.id,
-              citizenship_number: citizNo,
-              date_of_birth: dob,
-              address: address,
-              citizenship_front: frontPath,
-              citizenship_back: backPath,
-              verification_status: 'pending'
-            });
+            .insert(voterData);
 
           if (insErr) throw insErr;
         }
 
         if (window.showToast) {
-          showToast('success', 'Submitted', 'Citizenship verification documents submitted successfully! Status is now Pending Review.');
+          showToast('success', 'Submitted', 'Documents, live photo and camera fingerprint submitted successfully! Status is Pending Review.');
         }
 
         setTimeout(() => {

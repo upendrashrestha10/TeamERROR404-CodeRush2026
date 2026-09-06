@@ -1,6 +1,6 @@
 /**
  * E-CHUNAB - Admin Voter Verification Management (js/admin/voters.js)
- * Module: Live voter verification inspection, secure signed document previews, approve & reject
+ * Module: Live voter verification inspection, secure signed document & live camera photo previews, approve & reject
  */
 
 let allVoterRecords = [];
@@ -159,7 +159,7 @@ function renderVotersTable() {
         <td style="text-align: right;">
           <button class="btn btn-sm ${voter.verification_status === 'pending' ? 'btn-primary' : 'btn-outline'}" 
                   onclick="openVoterInspectionModal('${voter.id}')">
-            ${voter.verification_status === 'pending' ? 'Inspect Documents' : 'View Record'}
+            ${voter.verification_status === 'pending' ? 'Inspect Documents & Photo' : 'View Record'}
           </button>
         </td>
       </tr>
@@ -186,32 +186,127 @@ async function openVoterInspectionModal(voterId) {
   if (rejectContainer) rejectContainer.style.display = 'none';
   if (rejectInput) rejectInput.value = voter.rejection_reason || '';
 
-  // Get document preview boxes
-  const docBoxes = document.querySelectorAll('.doc-preview-box img');
-  if (docBoxes[0]) docBoxes[0].src = '';
-  if (docBoxes[1]) docBoxes[1].src = '';
+  // Get preview element handles
+  const frontImg = document.getElementById('preview-citiz-front');
+  const backImg = document.getElementById('preview-citiz-back');
+  const liveImg = document.getElementById('preview-live-photo');
+  const fpRefImg = document.getElementById('preview-fp-ref');
+  const fpLiveImg = document.getElementById('preview-fp-live');
+  
+  const missingLiveText = document.getElementById('live-photo-missing-text');
+  const missingFpRefText = document.getElementById('fp-ref-missing-text');
+  const missingFpLiveText = document.getElementById('fp-live-missing-text');
 
-  // Generate secure signed URLs for private citizenship documents
+  if (frontImg) frontImg.src = '';
+  if (backImg) backImg.src = '';
+  if (liveImg) liveImg.src = '';
+  if (fpRefImg) fpRefImg.src = '';
+  if (fpLiveImg) fpLiveImg.src = '';
+
+  // 1. Generate secure signed URL for Citizenship Front
   try {
-    if (voter.citizenship_front) {
+    if (voter.citizenship_front && frontImg) {
       const { data: frontData } = await client.storage
         .from('citizenship-docs')
         .createSignedUrl(voter.citizenship_front, 3600);
-      if (frontData?.signedUrl && docBoxes[0]) {
-        docBoxes[0].src = frontData.signedUrl;
+      if (frontData?.signedUrl) {
+        frontImg.src = frontData.signedUrl;
       }
     }
 
-    if (voter.citizenship_back) {
+    // 2. Generate secure signed URL for Citizenship Back
+    if (voter.citizenship_back && backImg) {
       const { data: backData } = await client.storage
         .from('citizenship-docs')
         .createSignedUrl(voter.citizenship_back, 3600);
-      if (backData?.signedUrl && docBoxes[1]) {
-        docBoxes[1].src = backData.signedUrl;
+      if (backData?.signedUrl) {
+        backImg.src = backData.signedUrl;
       }
     }
+
+    // 3. Generate secure signed URL for Live Camera Verification Photo
+    if (voter.live_photo_path && liveImg) {
+      const { data: liveData } = await client.storage
+        .from('voter-live-photos')
+        .createSignedUrl(voter.live_photo_path, 3600);
+      if (liveData?.signedUrl) {
+        liveImg.src = liveData.signedUrl;
+        liveImg.style.display = 'block';
+        if (missingLiveText) missingLiveText.style.display = 'none';
+      }
+    } else {
+      if (liveImg) liveImg.style.display = 'none';
+      if (missingLiveText) missingLiveText.style.display = 'block';
+    }
+
+    // 4. Generate secure signed URL for Reference Fingerprint
+    if (voter.fingerprint_reference_path && fpRefImg) {
+      const { data: refFpData } = await client.storage
+        .from('voter-fingerprints')
+        .createSignedUrl(voter.fingerprint_reference_path, 3600);
+      if (refFpData?.signedUrl) {
+        fpRefImg.src = refFpData.signedUrl;
+        fpRefImg.style.display = 'block';
+        if (missingFpRefText) missingFpRefText.style.display = 'none';
+      }
+    } else {
+      if (fpRefImg) fpRefImg.style.display = 'none';
+      if (missingFpRefText) missingFpRefText.style.display = 'block';
+    }
+
+    // 5. Generate secure signed URL for Live Camera Fingerprint
+    if (voter.fingerprint_live_path && fpLiveImg) {
+      const { data: liveFpData } = await client.storage
+        .from('voter-fingerprints')
+        .createSignedUrl(voter.fingerprint_live_path, 3600);
+      if (liveFpData?.signedUrl) {
+        fpLiveImg.src = liveFpData.signedUrl;
+        fpLiveImg.style.display = 'block';
+        if (missingFpLiveText) missingFpLiveText.style.display = 'none';
+      }
+    } else {
+      if (fpLiveImg) fpLiveImg.style.display = 'none';
+      if (missingFpLiveText) missingFpLiveText.style.display = 'block';
+    }
+
   } catch (err) {
-    console.error('[Signed URL Error]', err);
+    console.error('[Signed URL Generation Error]', err);
+  }
+
+  // Populate Biometric Matching Summary & Warning Notice
+  const matchBadge = document.getElementById('modal-fp-match-badge');
+  const matchDetails = document.getElementById('modal-fp-match-details');
+  const warningBanner = document.getElementById('modal-fp-warning-banner');
+
+  const status = (voter.fingerprint_match_status || 'pending').toLowerCase();
+  const score = (voter.fingerprint_match_score !== null && voter.fingerprint_match_score !== undefined) ? voter.fingerprint_match_score : 'N/A';
+
+  if (matchBadge) {
+    if (status === 'matched') {
+      matchBadge.className = 'badge badge-approved';
+      matchBadge.textContent = 'MATCH ✓';
+    } else if (status === 'not_matched') {
+      matchBadge.className = 'badge badge-rejected';
+      matchBadge.textContent = 'NO MATCH ❌';
+    } else if (status === 'unable_to_verify') {
+      matchBadge.className = 'badge badge-pending';
+      matchBadge.textContent = 'UNABLE TO VERIFY ⚠️';
+    } else {
+      matchBadge.className = 'badge badge-pending';
+      matchBadge.textContent = 'REQUIRES REVIEW ⏳';
+    }
+  }
+
+  if (matchDetails) {
+    matchDetails.textContent = `Inlier Match Score: ${score} | Status: ${status.toUpperCase()} | Algorithm: OpenCV SIFT Keypoint & RANSAC Inlier Matching`;
+  }
+
+  if (warningBanner) {
+    if (status === 'not_matched' || status === 'unable_to_verify' || status === 'requires_review') {
+      warningBanner.style.display = 'block';
+    } else {
+      warningBanner.style.display = 'none';
+    }
   }
 
   // Configure action buttons visibility
