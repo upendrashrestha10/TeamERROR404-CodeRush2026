@@ -1,6 +1,7 @@
 /**
  * E-CHUNAB - Dedicated Admin Login Logic (js/admin/login.js)
  * Module: Authenticate Electoral Commission personnel and enforce role='admin'
+ * Includes diagnostic logging for troubleshooting authentication flows
  */
 
 async function handleAdminLogin() {
@@ -11,13 +12,17 @@ async function handleAdminLogin() {
   const email = emailInput ? emailInput.value.trim() : '';
   const password = passwordInput ? passwordInput.value : '';
 
+  console.log('[Admin Auth Diagnostic] 1. Supabase URL being used:', window.SUPABASE_URL || 'Not configured');
+
   if (!email || !password) {
+    console.warn('[Admin Auth Diagnostic] Validation failed: missing email or password.');
     if (window.showToast) showToast('warning', 'Validation', 'Please enter both admin email and password.');
     return;
   }
 
   const client = window.getSupabaseClient ? window.getSupabaseClient() : null;
   if (!client) {
+    console.error('[Admin Auth Diagnostic] 8. Access Denied Reason: Supabase client unavailable or improperly configured.');
     if (window.showToast) showToast('error', 'Configuration Error', 'Unable to connect to Supabase authentication.');
     return;
   }
@@ -34,7 +39,16 @@ async function handleAdminLogin() {
       password: password
     });
 
-    if (authError) throw authError;
+    if (authError) {
+      console.error('[Admin Auth Diagnostic] 2. signInWithPassword() status: FAILED');
+      console.error('[Admin Auth Diagnostic] 7. Exact error returned by Supabase Auth:', authError.message, '(Code:', authError.status || authError.code, ')');
+      console.error('[Admin Auth Diagnostic] 8. Access Denied Reason: Invalid login credentials at Supabase Auth credential level.');
+      throw authError;
+    }
+
+    console.log('[Admin Auth Diagnostic] 2. signInWithPassword() status: SUCCESS');
+    console.log('[Admin Auth Diagnostic] 3. Authenticated User ID:', authData.user.id);
+    console.log('[Admin Auth Diagnostic] 4. Authenticated User Email:', authData.user.email);
 
     // 2. Query public.profiles to verify role='admin'
     const { data: profile, error: profError } = await client
@@ -43,12 +57,19 @@ async function handleAdminLogin() {
       .eq('id', authData.user.id)
       .single();
 
-    if (profError) throw profError;
+    if (profError) {
+      console.error('[Admin Auth Diagnostic] 5. Profiles record check: FAILED / NOT FOUND');
+      console.error('[Admin Auth Diagnostic] 7. Exact error returned by Supabase DB:', profError.message);
+      console.error('[Admin Auth Diagnostic] 8. Access Denied Reason: Profile lookup failed for authenticated user UUID.');
+      throw profError;
+    }
+
+    console.log('[Admin Auth Diagnostic] 5. Profiles record check: EXISTS');
+    console.log('[Admin Auth Diagnostic] 6. Profile Role:', profile ? profile.role : 'None');
 
     // 3. Role Integrity Check
     if (!profile || profile.role !== 'admin') {
-      // User is a voter or non-admin actor -> DENY ACCESS and sign out session immediately
-      console.warn('[Admin Login] Access denied for non-admin user:', authData.user.id);
+      console.warn('[Admin Auth Diagnostic] 8. Access Denied Reason: Role mismatch. Expected role "admin", found:', profile ? profile.role : 'null');
       await client.auth.signOut();
 
       if (window.showToast) {
@@ -58,6 +79,7 @@ async function handleAdminLogin() {
     }
 
     // 4. Admin Verified -> Proceed to Admin Dashboard
+    console.log('[Admin Auth Diagnostic] Access Granted! Redirecting to admin dashboard...');
     if (window.showToast) {
       showToast('success', 'Admin Authenticated', `Welcome, ${profile.full_name || 'Commission Officer'}!`);
     }
@@ -67,7 +89,7 @@ async function handleAdminLogin() {
     }, 800);
 
   } catch (err) {
-    console.error('[Admin Login Error]', err);
+    console.error('[Admin Auth Catch]', err);
     let msg = err.message || 'Invalid admin credentials.';
     if (msg.toLowerCase().includes('invalid login credentials')) {
       msg = 'Invalid email or password. Please verify your credentials.';

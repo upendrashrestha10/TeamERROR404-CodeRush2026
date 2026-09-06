@@ -106,15 +106,16 @@ async function loadActiveElectionState(client, voter) {
   const positionsCard = statCards[2];
 
   try {
-    // 1. Fetch current active election
-    const { data: election, error: elecErr } = await client
+    // 1. Fetch current active elections (Array query to handle multiple active elections gracefully)
+    const { data: elections, error: elecErr } = await client
       .from('elections')
       .select('*, positions(count)')
       .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .maybeSingle();
+      .order('created_at', { ascending: false });
 
     if (elecErr) throw elecErr;
+
+    const election = (elections && elections.length > 0) ? elections[0] : null;
 
     if (!election) {
       // No active election

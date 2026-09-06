@@ -1,6 +1,7 @@
 /**
  * E-CHUNAB - Voter Digital Ballot & Atomic Submission (js/voter/vote.js)
  * Module: Dynamic election loading, candidate selection, review modal, & cast_ballot RPC
+ * Includes diagnostic logging to trace ballot loading and error handling
  */
 
 let activeElection = null;
@@ -81,25 +82,32 @@ async function loadBallotData(client) {
     `;
   }
 
+  console.log('[Digital Ballot Diagnostic] 1. Supabase Client Initialized. URL:', window.SUPABASE_URL || 'Configured');
+
   try {
-    // 1. Fetch active election
-    const { data: election, error: elecErr } = await client
+    // 1. Fetch active elections (Returns array, avoids .single() PostgREST 406 errors)
+    console.log('[Digital Ballot Diagnostic] 2. Querying active elections (status="active")...');
+    const { data: elections, error: elecErr } = await client
       .from('elections')
       .select('*')
       .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .maybeSingle();
+      .order('created_at', { ascending: false });
 
-    if (elecErr) throw elecErr;
+    if (elecErr) {
+      console.error('[Digital Ballot Diagnostic] Active Election Query Error:', elecErr.message);
+      throw elecErr;
+    }
 
-    if (!election) {
+    console.log(`[Digital Ballot Diagnostic] 3. Active elections retrieved: ${elections ? elections.length : 0}`);
+
+    if (!elections || elections.length === 0) {
       if (container) {
         container.innerHTML = `
           <div class="card" style="text-align: center; padding: 48px 24px;">
             <div style="font-size: 3rem; margin-bottom: 12px;">🗳️</div>
-            <h2 style="color: var(--gray-900); margin-bottom: 8px;">No Active Election</h2>
+            <h2 style="color: var(--gray-900); margin-bottom: 8px;">There is currently no active election.</h2>
             <p style="color: var(--gray-600); max-width: 500px; margin: 0 auto 20px;">
-              There is currently no active election cycle available for voting.
+              The Electoral Commission has not opened any live election cycle at this time. Please check back later.
             </p>
             <a href="dashboard.html" class="btn btn-outline">&larr; Return to Dashboard</a>
           </div>
@@ -108,7 +116,18 @@ async function loadBallotData(client) {
       return;
     }
 
-    activeElection = election;
+    // Select the most recent active election
+    activeElection = elections[0];
+    console.log(`[Digital Ballot Diagnostic] 4. Selected Active Election ID: ${activeElection.id}, Title: "${activeElection.title}"`);
+
+    // Update Header Card
+    const headerCard = document.getElementById('active-election-header-card');
+    const titleEl = document.getElementById('active-election-title');
+    const descEl = document.getElementById('active-election-desc');
+
+    if (titleEl) titleEl.textContent = activeElection.title;
+    if (descEl) descEl.textContent = activeElection.description || 'Cast your secret ballot for all contestable positions below.';
+    if (headerCard) headerCard.style.display = 'block';
 
     // 2. Check if already voted using public.has_voted(election_id)
     const { data: hasVoted, error: votedErr } = await client.rpc('has_voted', {
@@ -116,36 +135,66 @@ async function loadBallotData(client) {
     });
 
     if (!votedErr && hasVoted) {
+      console.log('[Digital Ballot Diagnostic] Voter has already cast ballot for this election.');
       renderAlreadyVotedState();
       return;
     }
 
-    // 3. Fetch positions ordered by display_order
+    // 3. Fetch positions for active election ordered by display_order (Returns array)
+    console.log(`[Digital Ballot Diagnostic] 5. Querying positions for election_id=${activeElection.id}...`);
     const { data: positions, error: posErr } = await client
       .from('positions')
       .select('*')
       .eq('election_id', activeElection.id)
       .order('display_order', { ascending: true });
 
-    if (posErr) throw posErr;
-    electionPositions = positions || [];
+    if (posErr) {
+      console.error('[Digital Ballot Diagnostic] Position Query Error:', posErr.message);
+      throw posErr;
+    }
 
-    // 4. Fetch candidates for this election ordered by display_order
+    electionPositions = positions || [];
+    console.log(`[Digital Ballot Diagnostic] Positions count: ${electionPositions.length}`);
+
+    if (electionPositions.length === 0) {
+      if (container) {
+        container.innerHTML = `
+          <div class="card" style="text-align: center; padding: 48px 24px;">
+            <div style="font-size: 3rem; margin-bottom: 12px;">📋</div>
+            <h2 style="color: var(--gray-900); margin-bottom: 8px;">No positions have been configured for this election yet.</h2>
+            <p style="color: var(--gray-600); max-width: 500px; margin: 0 auto 20px;">
+              The Electoral Commission has created the election cycle but has not added positions yet.
+            </p>
+          </div>
+        `;
+      }
+      return;
+    }
+
+    // 4. Fetch candidates for active election ordered by display_order (Returns array)
+    console.log(`[Digital Ballot Diagnostic] 6. Querying candidates for election_id=${activeElection.id}...`);
     const { data: candidates, error: candErr } = await client
       .from('candidates')
       .select('*')
       .eq('election_id', activeElection.id)
       .order('display_order', { ascending: true });
 
-    if (candErr) throw candErr;
+    if (candErr) {
+      console.error('[Digital Ballot Diagnostic] Candidate Query Error:', candErr.message);
+      throw candErr;
+    }
 
-    // Group candidates by position_id
+    console.log(`[Digital Ballot Diagnostic] Candidates count: ${candidates ? candidates.length : 0}`);
+
+    // Group candidates strictly by position_id
     candidatesByPosition = {};
     (candidates || []).forEach(cand => {
-      if (!candidatesByPosition[cand.position_id]) {
-        candidatesByPosition[cand.position_id] = [];
+      if (cand.election_id === activeElection.id) {
+        if (!candidatesByPosition[cand.position_id]) {
+          candidatesByPosition[cand.position_id] = [];
+        }
+        candidatesByPosition[cand.position_id].push(cand);
       }
-      candidatesByPosition[cand.position_id].push(cand);
     });
 
     // 5. Render dynamic digital ballot paper
@@ -192,7 +241,12 @@ function renderBallot() {
   if (!container) return;
 
   if (electionPositions.length === 0) {
-    container.innerHTML = `<div class="card" style="text-align:center; padding:30px;">No positions available on this ballot.</div>`;
+    container.innerHTML = `
+      <div class="card" style="text-align: center; padding: 48px 24px;">
+        <div style="font-size: 3rem; margin-bottom: 12px;">📋</div>
+        <h2 style="color: var(--gray-900); margin-bottom: 8px;">No positions have been configured for this election yet.</h2>
+      </div>
+    `;
     return;
   }
 
@@ -203,36 +257,42 @@ function renderBallot() {
       <div class="position-section" id="pos-section-${pos.id}">
         <div class="position-header">
           <div>
-            <h3>Position: ${window.escapeHTML(pos.name)}</h3>
-            <p style="font-size: 0.85rem; color: var(--gray-500);">${window.escapeHTML(pos.description || '')}</p>
+            <h3 style="margin-bottom: 4px;">Position: ${window.escapeHTML(pos.name)}</h3>
+            <p style="font-size: 0.85rem; color: var(--gray-500); margin: 0;">${window.escapeHTML(pos.description || '')}</p>
           </div>
-          <span class="badge badge-draft">1 Choice Required</span>
+          <span class="badge badge-draft">1 Choice Allowed</span>
         </div>
 
-        <div class="candidate-grid">
-          ${candidates.map(cand => {
-            const isSelected = selectedCandidates[pos.id] === cand.id;
-            const photoUrl = cand.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80';
+        ${candidates.length === 0 ? `
+          <div style="padding: 24px; background: var(--gray-50); border-radius: var(--radius-md); text-align: center; color: var(--gray-500); margin-top: 16px;">
+            No candidates have been nominated for this position yet.
+          </div>
+        ` : `
+          <div class="candidate-grid">
+            ${candidates.map(cand => {
+              const isSelected = selectedCandidates[pos.id] === cand.id;
+              const photoUrl = cand.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80';
 
-            return `
-              <div class="candidate-card ${isSelected ? 'selected' : ''}" 
-                   data-position-id="${pos.id}" 
-                   data-candidate-id="${cand.id}"
-                   onclick="selectCandidate('${pos.id}', '${cand.id}')">
-                <div class="candidate-photo-wrapper">
-                  <img src="${window.escapeHTML(photoUrl)}" alt="${window.escapeHTML(cand.name)}" class="candidate-photo">
+              return `
+                <div class="candidate-card ${isSelected ? 'selected' : ''}" 
+                     data-position-id="${pos.id}" 
+                     data-candidate-id="${cand.id}"
+                     onclick="selectCandidate('${pos.id}', '${cand.id}')">
+                  <div class="candidate-photo-wrapper">
+                    <img src="${window.escapeHTML(photoUrl)}" alt="${window.escapeHTML(cand.name)}" class="candidate-photo">
+                  </div>
+                  <div class="candidate-name">${window.escapeHTML(cand.name)}</div>
+                  <div class="candidate-party">${window.escapeHTML(cand.party)}</div>
+                  <div class="candidate-symbol">${window.escapeHTML(cand.symbol)}</div>
+                  <div class="candidate-bio">${window.escapeHTML(cand.bio || '')}</div>
+                  <div class="candidate-radio">
+                    <input type="radio" name="pos_${pos.id}" value="${cand.id}" ${isSelected ? 'checked' : ''}>
+                  </div>
                 </div>
-                <div class="candidate-name">${window.escapeHTML(cand.name)}</div>
-                <div class="candidate-party">${window.escapeHTML(cand.party)}</div>
-                <div class="candidate-symbol">${window.escapeHTML(cand.symbol)}</div>
-                <div class="candidate-bio">${window.escapeHTML(cand.bio || '')}</div>
-                <div class="candidate-radio">
-                  <input type="radio" name="pos_${pos.id}" value="${cand.id}" ${isSelected ? 'checked' : ''}>
-                </div>
-              </div>
-            `;
-          }).join('')}
-        </div>
+              `;
+            }).join('')}
+          </div>
+        `}
       </div>
     `;
   }).join('');
@@ -262,7 +322,8 @@ function setupReviewAndSubmitHandlers(client) {
       // Validate that every configured position has a selected candidate
       const missingPositions = [];
       electionPositions.forEach(pos => {
-        if (!selectedCandidates[pos.id]) {
+        const cands = candidatesByPosition[pos.id] || [];
+        if (cands.length > 0 && !selectedCandidates[pos.id]) {
           missingPositions.push(pos.name);
         }
       });
@@ -281,13 +342,15 @@ function setupReviewAndSubmitHandlers(client) {
           const chosenCandId = selectedCandidates[pos.id];
           const cand = (candidatesByPosition[pos.id] || []).find(c => c.id === chosenCandId);
 
+          if (!cand) return '';
+
           return `
             <div class="ballot-review-item">
               <span class="ballot-review-pos">${window.escapeHTML(pos.name)}</span>
-              <span class="ballot-review-cand">${window.escapeHTML(cand?.name || 'N/A')} (${window.escapeHTML(cand?.symbol || '')})</span>
+              <span class="ballot-review-cand">${window.escapeHTML(cand.name)} (${window.escapeHTML(cand.symbol)})</span>
             </div>
           `;
-        }).join('');
+        }).filter(Boolean).join('');
       }
 
       if (window.openModal) {
@@ -303,10 +366,15 @@ function setupReviewAndSubmitHandlers(client) {
 
       try {
         // Build payload: array of { position_id, candidate_id }
-        const votesPayload = electionPositions.map(pos => ({
-          position_id: pos.id,
-          candidate_id: selectedCandidates[pos.id]
-        }));
+        const votesPayload = [];
+        electionPositions.forEach(pos => {
+          if (selectedCandidates[pos.id]) {
+            votesPayload.push({
+              position_id: pos.id,
+              candidate_id: selectedCandidates[pos.id]
+            });
+          }
+        });
 
         console.log('[Cast Ballot] Submitting payload to RPC:', votesPayload);
 

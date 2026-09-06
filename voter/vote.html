@@ -95,12 +95,23 @@
       </header>
 
       <main class="content-body">
+        <!-- Active Election Banner -->
+        <div id="active-election-header-card" class="card" style="margin-bottom: 20px; padding: 20px; display: none;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <span class="badge badge-active" style="margin-bottom: 6px;"><span class="badge-dot"></span>Active Election</span>
+              <h2 id="active-election-title" style="margin: 0; color: var(--primary-900); font-size: 1.5rem;">--</h2>
+              <p id="active-election-desc" style="font-size: 0.85rem; color: var(--gray-500); margin: 4px 0 0 0;">--</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Guidance Alert -->
         <div style="background: var(--primary-50); border: 1px solid var(--primary-100); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between;">
           <div style="font-size: 0.875rem; color: var(--primary-800);">
             <strong>Instructions:</strong> Select exactly one candidate for each contested position. Review selections before confirming final submission.
           </div>
-          <span class="badge badge-draft">Foundation Preview</span>
+          <span class="badge badge-draft">Official Ballot</span>
         </div>
 
         <div id="ballot-positions-container">

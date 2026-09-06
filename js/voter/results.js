@@ -22,15 +22,16 @@ async function loadElectionResults(client) {
   const container = document.getElementById('results-positions-container');
 
   try {
-    // 1. Get active or most recent election
-    const { data: election, error: elecErr } = await client
+    // 1. Get active or most recent election (Array query)
+    const { data: elections, error: elecErr } = await client
       .from('elections')
       .select('*')
       .in('status', ['active', 'completed'])
-      .order('created_at', { ascending: false })
-      .maybeSingle();
+      .order('created_at', { ascending: false });
 
     if (elecErr) throw elecErr;
+
+    const election = (elections && elections.length > 0) ? elections[0] : null;
 
     if (!election) {
       if (container) {
