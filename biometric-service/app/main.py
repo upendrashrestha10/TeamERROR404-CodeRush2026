@@ -21,7 +21,7 @@ app.add_middleware(
 )
 
 class FingerprintVerificationRequest(BaseModel):
-    reference_image: str = Field(..., description="Base64 encoded reference fingerprint image (cropped from citizenship document).")
+    reference_image: str = Field(..., description="Base64 encoded reference fingerprint image (captured via citizenship card camera scan ROI).")
     live_image: str = Field(..., description="Base64 encoded live fingerprint image captured via device camera.")
 
 class FingerprintVerificationResponse(BaseModel):
@@ -47,3 +47,4 @@ def verify_fingerprint(req: FingerprintVerificationRequest):
     
     result = match_fingerprints(req.reference_image, req.live_image)
     return result
+

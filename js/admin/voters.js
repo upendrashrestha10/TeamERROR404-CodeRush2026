@@ -31,12 +31,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     filterSelect.addEventListener('change', () => renderVotersTable());
   }
 
-  // Setup modal button listeners
+  // Setup modal button listeners & image viewer
   setupModalActionButtons(client, authData?.user);
+  setupImageViewer();
 
   // Load live voters
   await fetchVoterRecords(client);
 });
+
 
 async function fetchVoterRecords(client) {
   const tableBody = document.querySelector('#voters-table tbody');
@@ -211,6 +213,9 @@ async function openVoterInspectionModal(voterId) {
         .createSignedUrl(voter.citizenship_front, 3600);
       if (frontData?.signedUrl) {
         frontImg.src = frontData.signedUrl;
+        frontImg.dataset.fullUrl = frontData.signedUrl;
+        frontImg.dataset.title = 'Citizenship Front';
+        frontImg.classList.add('clickable-preview');
       }
     }
 
@@ -221,6 +226,9 @@ async function openVoterInspectionModal(voterId) {
         .createSignedUrl(voter.citizenship_back, 3600);
       if (backData?.signedUrl) {
         backImg.src = backData.signedUrl;
+        backImg.dataset.fullUrl = backData.signedUrl;
+        backImg.dataset.title = 'Citizenship Back';
+        backImg.classList.add('clickable-preview');
       }
     }
 
@@ -231,6 +239,9 @@ async function openVoterInspectionModal(voterId) {
         .createSignedUrl(voter.live_photo_path, 3600);
       if (liveData?.signedUrl) {
         liveImg.src = liveData.signedUrl;
+        liveImg.dataset.fullUrl = liveData.signedUrl;
+        liveImg.dataset.title = 'Live Face Photo';
+        liveImg.classList.add('clickable-preview');
         liveImg.style.display = 'block';
         if (missingLiveText) missingLiveText.style.display = 'none';
       }
@@ -246,6 +257,9 @@ async function openVoterInspectionModal(voterId) {
         .createSignedUrl(voter.fingerprint_reference_path, 3600);
       if (refFpData?.signedUrl) {
         fpRefImg.src = refFpData.signedUrl;
+        fpRefImg.dataset.fullUrl = refFpData.signedUrl;
+        fpRefImg.dataset.title = 'Citizenship Card Fingerprint';
+        fpRefImg.classList.add('clickable-preview');
         fpRefImg.style.display = 'block';
         if (missingFpRefText) missingFpRefText.style.display = 'none';
       }
@@ -261,6 +275,9 @@ async function openVoterInspectionModal(voterId) {
         .createSignedUrl(voter.fingerprint_live_path, 3600);
       if (liveFpData?.signedUrl) {
         fpLiveImg.src = liveFpData.signedUrl;
+        fpLiveImg.dataset.fullUrl = liveFpData.signedUrl;
+        fpLiveImg.dataset.title = 'Live Fingerprint';
+        fpLiveImg.classList.add('clickable-preview');
         fpLiveImg.style.display = 'block';
         if (missingFpLiveText) missingFpLiveText.style.display = 'none';
       }
@@ -273,7 +290,7 @@ async function openVoterInspectionModal(voterId) {
     console.error('[Signed URL Generation Error]', err);
   }
 
-  // Populate Biometric Matching Summary & Warning Notice
+  // Populate Biometric Matching Summary & Warning Notice (Requirements 25, 26, 27)
   const matchBadge = document.getElementById('modal-fp-match-badge');
   const matchDetails = document.getElementById('modal-fp-match-details');
   const warningBanner = document.getElementById('modal-fp-warning-banner');
@@ -293,25 +310,43 @@ async function openVoterInspectionModal(voterId) {
       matchBadge.textContent = 'UNABLE TO VERIFY ⚠️';
     } else {
       matchBadge.className = 'badge badge-pending';
-      matchBadge.textContent = 'REQUIRES REVIEW ⏳';
+      matchBadge.textContent = 'PENDING REVIEW ⏳';
     }
   }
 
   if (matchDetails) {
-    matchDetails.textContent = `Inlier Match Score: ${score} | Status: ${status.toUpperCase()} | Algorithm: OpenCV SIFT Keypoint & RANSAC Inlier Matching`;
+    matchDetails.textContent = `Verified Inlier Score: ${score} | Status: ${status.toUpperCase()} | Source: Citizenship Card Camera Scan vs Voter Live Capture`;
   }
 
   if (warningBanner) {
-    if (status === 'not_matched' || status === 'unable_to_verify' || status === 'requires_review') {
-      warningBanner.style.display = 'block';
+    warningBanner.style.display = 'block';
+    if (status === 'not_matched') {
+      warningBanner.style.background = 'rgba(220,38,38,0.1)';
+      warningBanner.style.border = '1px solid rgba(220,38,38,0.3)';
+      warningBanner.style.color = 'var(--accent-red-700)';
+      warningBanner.innerHTML = '❌ <strong>Biometric Warning:</strong> Fingerprint comparison did not produce a sufficient match. Carefully review the citizenship document and fingerprint captures before making a decision.';
+    } else if (status === 'unable_to_verify') {
+      warningBanner.style.background = 'rgba(234,179,8,0.12)';
+      warningBanner.style.border = '1px solid rgba(234,179,8,0.35)';
+      warningBanner.style.color = 'var(--warning-700)';
+      warningBanner.innerHTML = '⚠️ <strong>Biometric Warning:</strong> The biometric system could not reliably process the fingerprint images.';
+    } else if (status === 'matched') {
+      warningBanner.style.background = 'rgba(34,197,94,0.1)';
+      warningBanner.style.border = '1px solid rgba(34,197,94,0.3)';
+      warningBanner.style.color = 'var(--success-700)';
+      warningBanner.innerHTML = '✓ <strong>Biometric Result:</strong> Fingerprint matcher reports a match. Final voter approval still requires administrator review.';
     } else {
-      warningBanner.style.display = 'none';
+      warningBanner.style.background = 'var(--gray-100)';
+      warningBanner.style.border = '1px solid var(--gray-300)';
+      warningBanner.style.color = 'var(--gray-800)';
+      warningBanner.innerHTML = '⏳ <strong>Notice:</strong> Fingerprint verification pending administrative review.';
     }
   }
 
   // Configure action buttons visibility
   const approveBtn = document.getElementById('btn-approve-voter');
   const rejectBtn = document.getElementById('btn-reject-voter');
+
 
   if (voter.verification_status === 'approved') {
     if (approveBtn) approveBtn.textContent = 'Already Approved';
@@ -431,3 +466,209 @@ function setupModalActionButtons(client, currentUser) {
 
 // Expose globally for table action buttons
 window.openVoterInspectionModal = openVoterInspectionModal;
+
+/* ============================================================
+   REUSABLE FULL-SCREEN IMAGE VIEWER / LIGHTBOX (Requirement 1-10, 15, 29)
+   ============================================================ */
+let currentViewerZoom = 1;
+
+function setupImageViewer() {
+  const viewer = document.getElementById('imageViewer');
+  const closeBtn = document.getElementById('imageViewerClose');
+  const backdrop = document.getElementById('imageViewerBackdrop') || document.querySelector('.image-viewer-backdrop');
+  const imageElement = document.getElementById('imageViewerImage');
+  const zoomInBtn = document.getElementById('imageViewerZoomIn');
+  const zoomOutBtn = document.getElementById('imageViewerZoomOut');
+  const zoomLevel = document.getElementById('imageViewerZoomLevel') || document.getElementById('imageViewerReset');
+  const container = document.querySelector('.image-viewer-image-container') || document.getElementById('imageViewerStage');
+
+  if (!viewer) return;
+
+  // 10. Close button listener
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeImageViewer();
+    });
+  }
+
+  // 7. Backdrop closing listener
+  if (backdrop) {
+    backdrop.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeImageViewer();
+    });
+  }
+
+  // 6. Stop propagation on image click so clicking image NEVER closes viewer
+  if (imageElement) {
+    imageElement.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
+
+  // 8. ESC key listener
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const activeViewer = document.getElementById('imageViewer');
+      if (activeViewer && activeViewer.classList.contains('active')) {
+        closeImageViewer();
+      }
+    }
+  });
+
+  // 15. Zoom button listeners
+  if (zoomInBtn) {
+    zoomInBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setZoomScale(currentViewerZoom + 0.25);
+    });
+  }
+
+  if (zoomOutBtn) {
+    zoomOutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setZoomScale(currentViewerZoom - 0.25);
+    });
+  }
+
+  if (zoomLevel) {
+    zoomLevel.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setZoomScale(1);
+    });
+    zoomLevel.style.cursor = 'pointer';
+  }
+
+  // Mouse wheel zoom on image container
+  if (container) {
+    container.addEventListener('wheel', (e) => {
+      if (!viewer.classList.contains('active')) return;
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.15 : -0.15;
+      setZoomScale(currentViewerZoom + delta);
+    }, { passive: false });
+  }
+
+  // 1. EVENT DELEGATION: Dynamically created .clickable-preview images ALWAYS work
+  document.addEventListener('click', (event) => {
+    let target = event.target;
+
+    // Handle clicks on hint text badge inside doc-preview-box
+    if (target.classList.contains('doc-preview-hint')) {
+      const parentBox = target.closest('.doc-preview-box');
+      if (parentBox) {
+        const img = parentBox.querySelector('.clickable-preview');
+        if (img) target = img;
+      }
+    }
+
+    const image = target.closest('.clickable-preview');
+    if (!image) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const imageUrl =
+      image.dataset.fullUrl ||
+      image.dataset.imageUrl ||
+      image.getAttribute('src') ||
+      image.src;
+
+    const imageTitle =
+      image.dataset.title ||
+      image.alt ||
+      'Document Preview';
+
+    if (!imageUrl || imageUrl.trim() === '' || imageUrl.startsWith('data:') || image.style.display === 'none') {
+      if (window.showToast) {
+        showToast('warning', 'Notice', `Document image for "${imageTitle}" is not available.`);
+      }
+      return;
+    }
+
+    openImageViewer(imageUrl, imageTitle);
+  });
+}
+
+function openImageViewer(url, title = 'Document Preview') {
+  const viewer = document.getElementById('imageViewer');
+  const image = document.getElementById('imageViewerImage');
+  const titleElement = document.getElementById('imageViewerTitle') || document.getElementById('imageViewerCaption');
+  const closeBtn = document.getElementById('imageViewerClose');
+
+  if (!viewer || !image) {
+    console.error('Image viewer elements not found in DOM');
+    return;
+  }
+
+  if (!url || url.trim() === '') {
+    if (window.showToast) showToast('warning', 'Notice', 'Document image is not available.');
+    return;
+  }
+
+  image.src = url;
+  image.alt = title;
+
+  if (titleElement) {
+    titleElement.textContent = title;
+  }
+
+  viewer.style.display = 'flex';
+  viewer.classList.add('active');
+  viewer.setAttribute('aria-hidden', 'false');
+
+  document.body.style.overflow = 'hidden';
+
+  setZoomScale(1);
+
+  if (closeBtn) closeBtn.focus();
+}
+
+function closeImageViewer() {
+  const viewer = document.getElementById('imageViewer');
+  const image = document.getElementById('imageViewerImage');
+  const titleElement = document.getElementById('imageViewerTitle') || document.getElementById('imageViewerCaption');
+
+  if (!viewer) return;
+
+  viewer.classList.remove('active');
+  viewer.style.display = 'none';
+  viewer.setAttribute('aria-hidden', 'true');
+
+  if (image) {
+    image.src = '';
+    image.alt = '';
+    image.style.transform = 'none';
+  }
+
+  if (titleElement) {
+    titleElement.textContent = '';
+  }
+
+  document.body.style.overflow = '';
+  setZoomScale(1);
+}
+
+function setZoomScale(scale) {
+  currentViewerZoom = Math.max(0.5, Math.min(4, scale)); // Clamp zoom between 0.5x and 4x
+  const image = document.getElementById('imageViewerImage');
+  const zoomLevel = document.getElementById('imageViewerZoomLevel') || document.getElementById('imageViewerReset');
+
+  if (image) {
+    image.style.transform = `scale(${currentViewerZoom})`;
+  }
+  if (zoomLevel) {
+    zoomLevel.textContent = `${Math.round(currentViewerZoom * 100)}%`;
+  }
+}
+
+// Expose viewer functions globally
+window.openImageViewer = openImageViewer;
+window.closeImageViewer = closeImageViewer;
+
+

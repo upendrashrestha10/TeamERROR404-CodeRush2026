@@ -21,17 +21,18 @@ def decode_base64_image(base64_str: str) -> np.ndarray:
 def evaluate_image_quality(img: np.ndarray) -> dict:
     """
     Evaluates fingerprint image quality using objective Computer Vision metrics:
+    - Minimum usable resolution (minimum 100x100 pixels)
     - Blur / Sharpness via Laplacian Variance
     - Contrast via Standard Deviation
     - Brightness via Mean Pixel Intensity
-    - Usable dimensions
+    - Ridge structure visibility
     """
     if img is None or img.size == 0:
-        return {"usable": False, "rating": "insufficient", "reason": "Image is empty or unreadable."}
+        return {"usable": False, "rating": "insufficient", "reason": "Fingerprint image is empty or unreadable."}
     
     h, w = img.shape[:2]
-    if h < 120 or w < 120:
-        return {"usable": False, "rating": "insufficient", "reason": f"Image resolution too small ({w}x{h}). Minimum required: 120x120."}
+    if h < 100 or w < 100:
+        return {"usable": False, "rating": "insufficient", "reason": f"Fingerprint region too small ({w}x{h}). Minimum required: 100x100."}
     
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
     
@@ -39,31 +40,31 @@ def evaluate_image_quality(img: np.ndarray) -> dict:
     laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
     
     # 2. Contrast & Brightness calculation
-    mean_intensity = np.mean(gray)
-    std_contrast = np.std(gray)
+    mean_intensity = float(np.mean(gray))
+    std_contrast = float(np.std(gray))
     
-    # Thresholds
-    is_blurry = laplacian_var < 25.0
-    is_too_dark = mean_intensity < 30.0
-    is_too_bright = mean_intensity > 235.0
-    is_low_contrast = std_contrast < 20.0
+    # Thresholds for quality evaluation
+    is_blurry = laplacian_var < 20.0
+    is_too_dark = mean_intensity < 25.0
+    is_too_bright = mean_intensity > 240.0
+    is_low_contrast = std_contrast < 18.0
     
     reasons = []
     if is_blurry:
-        reasons.append(f"Image is too blurry (sharpness score: {laplacian_var:.1f}).")
+        reasons.append(f"Image is blurred (sharpness score: {laplacian_var:.1f}).")
     if is_too_dark:
         reasons.append("Image is excessively dark.")
     if is_too_bright:
-        reasons.append("Image has severe light reflection / overexposure.")
+        reasons.append("Image suffers from excessive glare or light exposure.")
     if is_low_contrast:
-        reasons.append("Low contrast between fingerprint ridges and background.")
+        reasons.append("Insufficient contrast between fingerprint ridges and background.")
         
     usable = not (is_blurry or is_too_dark or is_too_bright or is_low_contrast)
     
     rating = "high"
     if not usable:
         rating = "insufficient"
-    elif laplacian_var < 80.0 or std_contrast < 35.0:
+    elif laplacian_var < 60.0 or std_contrast < 30.0:
         rating = "medium"
         
     return {
@@ -73,28 +74,29 @@ def evaluate_image_quality(img: np.ndarray) -> dict:
         "contrast_std": round(std_contrast, 2),
         "mean_intensity": round(mean_intensity, 2),
         "dimensions": f"{w}x{h}",
-        "reason": " ".join(reasons) if reasons else "Quality acceptable for biometric processing."
+        "reason": " ".join(reasons) if reasons else "Quality acceptable for fingerprint feature matching."
     }
 
 def preprocess_fingerprint(img: np.ndarray) -> np.ndarray:
     """
-    Applies fingerprint preprocessing pipeline:
+    Standard Fingerprint Preprocessing Pipeline (Applied identically to Reference & Live images):
     1. Grayscale conversion
-    2. CLAHE (Contrast Limited Adaptive Histogram Equalization)
-    3. Gaussian Noise Reduction
-    4. Adaptive Ridge Binarization
+    2. Aspect-preserving normalization & resizing
+    3. CLAHE (Contrast Limited Adaptive Histogram Equalization)
+    4. Gaussian Noise Filter
+    5. Adaptive Thresholding for Ridge Segmentation
     """
     if len(img.shape) == 3:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     else:
         gray = img.copy()
         
-    # Resize to standard height preserving aspect ratio
-    target_height = 400
+    # Resize to standard height (350px) preserving aspect ratio
+    target_height = 350
     h, w = gray.shape
-    if h != target_height:
+    if h != target_height and h > 0:
         target_width = int(w * (target_height / float(h)))
-        gray = cv2.resize(gray, (target_width, target_height), interpolation=cv2.INTER_AREA)
+        gray = cv2.resize(gray, (max(1, target_width), target_height), interpolation=cv2.INTER_AREA)
         
     # 1. CLAHE Contrast Enhancement
     clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
@@ -110,3 +112,4 @@ def preprocess_fingerprint(img: np.ndarray) -> np.ndarray:
     )
     
     return binarized
+

@@ -83,12 +83,23 @@ async function runTests() {
     }
   });
 
-  if (!voterSignup.ok || !voterSignup.data.access_token) {
-    throw new Error(`Voter registration failed: ${JSON.stringify(voterSignup.data)}`);
+  let voterToken = voterSignup.data.access_token || voterSignup.data.session?.access_token;
+  let voterId = voterSignup.data.user?.id || voterSignup.data.id;
+
+  if (!voterToken) {
+    const loginRes = await post(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      email: testVoterEmail,
+      password: testPassword
+    });
+    voterToken = loginRes.data?.access_token;
+    voterId = loginRes.data?.user?.id || voterId;
   }
-  const voterToken = voterSignup.data.access_token;
-  const voterId = voterSignup.data.user.id;
-  console.log("✓ PASS: Voter registered with ID:", voterId);
+
+  if (!voterToken) {
+    throw new Error(`Voter registration / login failed: ${JSON.stringify(voterSignup.data)}`);
+  }
+  console.log("✓ PASS: Voter registered & authenticated with ID:", voterId);
+
 
   // -----------------------------------------------------------------
   // 2. AUTOMATIC PROFILE CREATION & ROLE CHECK
