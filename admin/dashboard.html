@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | E-CHUNAB</title>
+  <meta name="description" content="E-Chunab Election Commission Administration Dashboard">
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Admin Sidebar Navigation -->
+    <aside class="app-sidebar">
+      <div class="sidebar-brand">
+        <img src="../assets/images/logo.svg" alt="E-CHUNAB" width="36" height="36">
+        <div>
+          <div class="brand-text">E-CHUNAB</div>
+          <div class="brand-badge">Admin Suite</div>
+        </div>
+      </div>
+
+      <ul class="sidebar-menu">
+        <li class="sidebar-menu-item active">
+          <a href="dashboard.html">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+            </svg>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="voters.html">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <span>Voters</span>
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="elections.html">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <span>Elections</span>
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="candidates.html">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+            <span>Candidates</span>
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="results.html">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            <span>Results</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user-card">
+          <div class="sidebar-user-avatar" style="background: var(--accent-red-600);">A</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name" id="admin-display-name">Election Officer</div>
+            <div class="sidebar-user-role">Administrator</div>
+          </div>
+          <button class="action-logout" title="Sign Out" style="background:none; border:none; color:var(--gray-400); cursor:pointer; padding:4px;">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="app-main">
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle-btn" aria-label="Toggle navigation">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+          <div class="topbar-title">Commission Administration Overview</div>
+        </div>
+
+        <div class="topbar-right">
+          <span class="badge badge-active">Active Election Live</span>
+        </div>
+      </header>
+
+      <main class="content-body">
+        <!-- 6 Metrics Required by Section 8 -->
+        <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+          <!-- Total Voters -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Total Registered</span>
+              <div class="stat-icon">👥</div>
+            </div>
+            <div class="stat-value">1,850</div>
+            <p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 4px;">+48 this week</p>
+          </div>
+
+          <!-- Pending Verification -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Pending Verification</span>
+              <div class="stat-icon" style="background: var(--warning-50); color: var(--warning-600);">⏳</div>
+            </div>
+            <div class="stat-value" style="color: var(--warning-700);">42</div>
+            <p style="font-size: 0.75rem; color: var(--warning-700); margin-top: 4px;">Requires officer review</p>
+          </div>
+
+          <!-- Approved Voters -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Approved Voters</span>
+              <div class="stat-icon" style="background: var(--success-50); color: var(--success-600);">✓</div>
+            </div>
+            <div class="stat-value" style="color: var(--success-700);">1,780</div>
+            <p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 4px;">Eligible to vote</p>
+          </div>
+
+          <!-- Active Election -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Active Election</span>
+              <div class="stat-icon" style="background: var(--accent-red-50); color: var(--accent-red-600);">🗳️</div>
+            </div>
+            <div class="stat-value" style="font-size: 1.4rem;">1 Active</div>
+            <p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 4px;">Ends in 4 days</p>
+          </div>
+
+          <!-- Total Candidates -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Total Candidates</span>
+              <div class="stat-icon">👤</div>
+            </div>
+            <div class="stat-value">6</div>
+            <p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 4px;">Across 3 positions</p>
+          </div>
+
+          <!-- Total Votes -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Total Votes Cast</span>
+              <div class="stat-icon" style="background: var(--primary-50); color: var(--primary-600);">📊</div>
+            </div>
+            <div class="stat-value">1,420</div>
+            <p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 4px;">79.8% turnout rate</p>
+          </div>
+        </div>
+
+        <!-- Quick Commission Actions -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+          <!-- Recent Verification Requests Table Preview -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h3 class="card-title">Pending Voter Verifications</h3>
+                <p class="card-subtitle">Recent citizenship submissions awaiting validation</p>
+              </div>
+              <a href="voters.html" class="btn btn-outline btn-sm">View All &rarr;</a>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Citizenship No</th>
+                    <th>Registered</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Prakash KC</strong><br><small style="color:var(--gray-500)">prakash@example.com</small></td>
+                    <td>27-01-80-00124</td>
+                    <td>Today</td>
+                    <td><span class="badge badge-pending">Pending</span></td>
+                    <td><a href="voters.html" class="btn btn-outline btn-sm">Review</a></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Binita Gurung</strong><br><small style="color:var(--gray-500)">binita@example.com</small></td>
+                    <td>24-02-78-05512</td>
+                    <td>Yesterday</td>
+                    <td><span class="badge badge-pending">Pending</span></td>
+                    <td><a href="voters.html" class="btn btn-outline btn-sm">Review</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Quick Navigation Hub -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Election Control</h3>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <a href="elections.html" class="btn btn-outline" style="justify-content: flex-start; gap: 10px;">
+                <span>🗳️</span>
+                <span>Manage Election Cycles</span>
+              </a>
+              <a href="candidates.html" class="btn btn-outline" style="justify-content: flex-start; gap: 10px;">
+                <span>👥</span>
+                <span>Nominate Candidates</span>
+              </a>
+              <a href="results.html" class="btn btn-outline" style="justify-content: flex-start; gap: 10px;">
+                <span>📈</span>
+                <span>Audit Official Tally</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../config/supabase.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/admin/dashboard.js"></script>
+</body>
+</html>

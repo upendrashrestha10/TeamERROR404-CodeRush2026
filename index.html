@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-CHUNAB | Digital Election Management Platform</title>
+  <meta name="description" content="A secure, modern digital election management prototype built with HTML5, CSS3, Vanilla JavaScript, and Supabase.">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <style>
+    /* Landing Specific Styles */
+    .landing-hero {
+      background: radial-gradient(circle at top right, #1e3a8a 0%, #0f172a 100%);
+      color: var(--white);
+      padding: 90px 24px 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .landing-hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 40px;
+      background: linear-gradient(to top, var(--gray-50), transparent);
+    }
+    .hero-badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(220, 38, 38, 0.25);
+      border: 1px solid rgba(220, 38, 38, 0.5);
+      color: #fca5a5;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .hero-badge-live .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent-red-600);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-red-600);
+    }
+    .hero-title {
+      font-size: 2.8rem;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 18px;
+      color: var(--white);
+      letter-spacing: -0.5px;
+    }
+    .hero-desc {
+      font-size: 1.15rem;
+      color: var(--gray-300);
+      max-width: 640px;
+      margin: 0 auto 32px;
+      line-height: 1.6;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .portal-cards-section {
+      max-width: 1040px;
+      margin: -40px auto 60px;
+      padding: 0 20px;
+      position: relative;
+      z-index: 10;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+    .portal-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow-lg);
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+      display: flex;
+      flex-direction: column;
+    }
+    .portal-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-xl);
+    }
+    .portal-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .portal-voter .portal-icon { background: var(--primary-50); color: var(--primary-600); }
+    .portal-admin .portal-icon { background: var(--accent-red-50); color: var(--accent-red-600); }
+    .features-section {
+      max-width: 1100px;
+      margin: 0 auto 80px;
+      padding: 0 20px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+      margin-top: 36px;
+    }
+    .feature-item {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      padding: 24px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header style="background: var(--white); border-bottom: 1px solid var(--gray-200); position: sticky; top: 0; z-index: 50;">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between;">
+      <a href="index.html" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
+        <img src="assets/images/logo.svg" alt="E-CHUNAB" width="38" height="38">
+        <div>
+          <div style="font-family: var(--font-display); font-weight: 800; font-size: 1.25rem; color: var(--gray-900); letter-spacing: -0.5px;">E-CHUNAB</div>
+          <div style="font-size: 0.7rem; color: var(--gray-500); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Digital Election Portal</div>
+        </div>
+      </a>
+
+      <nav style="display: flex; align-items: center; gap: 12px;">
+        <a href="auth/login.html" class="btn btn-outline btn-sm">Login</a>
+        <a href="auth/register.html" class="btn btn-primary btn-sm">Voter Register</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="landing-hero">
+    <div class="hero-badge-live">
+      <span class="pulse-dot"></span>
+      <span>Official Prototype Election Environment</span>
+    </div>
+    <h1 class="hero-title">Transparent, Secure & Verified<br>Digital Civic Elections</h1>
+    <p class="hero-desc">
+      E-Chunab modernizes the electoral process with verified citizenship onboarding, multi-tier admin governance, cryptographic double-voting prevention, and transparent live results.
+    </p>
+    <div class="hero-actions">
+      <a href="auth/register.html" class="btn btn-accent btn-lg">Register to Vote</a>
+      <a href="auth/login.html" class="btn btn-outline btn-lg" style="color: var(--white); border-color: rgba(255,255,255,0.3);">Access Account</a>
+    </div>
+  </section>
+
+  <!-- Dual Portal Gateway Cards -->
+  <section class="portal-cards-section">
+    <!-- Voter Portal Card -->
+    <div class="portal-card portal-voter">
+      <div class="portal-icon">
+        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+        </svg>
+      </div>
+      <h3 style="margin-bottom: 8px;">Voter Gateway</h3>
+      <p style="font-size: 0.9rem; color: var(--gray-600); margin-bottom: 20px; flex-grow: 1;">
+        Submit national citizenship credentials for verification, review contested positions, and cast your ballot with cryptographic double-voting protection.
+      </p>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="voter/dashboard.html" class="btn btn-primary btn-sm" style="flex: 1;">Voter Dashboard</a>
+        <a href="auth/verification.html" class="btn btn-outline btn-sm">Verify ID</a>
+      </div>
+    </div>
+
+    <!-- Admin Portal Card -->
+    <div class="portal-card portal-admin">
+      <div class="portal-icon">
+        <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+        </svg>
+      </div>
+      <h3 style="margin-bottom: 8px;">Admin & Commission</h3>
+      <p style="font-size: 0.9rem; color: var(--gray-600); margin-bottom: 20px; flex-grow: 1;">
+        Inspect voter identification documents, approve or reject applications, orchestrate election cycles, manage nominees, and audit election tallies.
+      </p>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="admin/login.html" class="btn btn-accent btn-sm" style="flex: 1;">Admin Portal</a>
+        <a href="admin/login.html" class="btn btn-outline btn-sm">Review Voters</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Key Architecture Modules -->
+  <section class="features-section">
+    <div class="text-center">
+      <span class="badge badge-draft" style="margin-bottom: 8px;">System Architecture</span>
+      <h2>Core Digital Security Principles</h2>
+      <p style="max-width: 600px; margin: 6px auto 0;">Engineered according to the E-Chunab Master Specification.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-item">
+        <h4 style="margin-bottom: 8px; color: var(--primary-700);">🔒 Private Storage</h4>
+        <p style="font-size: 0.85rem; color: var(--gray-600);">
+          Citizenship front and back documents are uploaded to private Supabase Storage buckets, strictly isolated via signed RLS authorization.
+        </p>
+      </div>
+      <div class="feature-item">
+        <h4 style="margin-bottom: 8px; color: var(--primary-700);">🛡️ Double-Vote Defense</h4>
+        <p style="font-size: 0.85rem; color: var(--gray-600);">
+          Enforced by PostgreSQL composite unique constraints <code>(voter_id, election_id, position_id)</code> making double-voting mathematically impossible.
+        </p>
+      </div>
+      <div class="feature-item">
+        <h4 style="margin-bottom: 8px; color: var(--primary-700);">🗳️ Secret Ballots</h4>
+        <p style="font-size: 0.85rem; color: var(--gray-600);">
+          Public results display only aggregate tallies. The voter results interface never reveals individual candidate selections after submission.
+        </p>
+      </div>
+      <div class="feature-item">
+        <h4 style="margin-bottom: 8px; color: var(--primary-700);">👥 Role Integrity</h4>
+        <p style="font-size: 0.85rem; color: var(--gray-600);">
+          Voter registration strictly forces voter roles. Elevation to admin is performed securely server-side or via administrative database controls.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="background: var(--primary-900); color: var(--gray-400); padding: 40px 24px; border-top: 1px solid rgba(255,255,255,0.08);">
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: gap; gap: 20px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <img src="assets/images/logo.svg" alt="E-CHUNAB" width="30" height="30">
+        <span style="color: var(--white); font-weight: 700;">E-CHUNAB Prototype</span>
+      </div>
+      <div style="font-size: 0.85rem;">
+        Academic / Hackathon Digital Election Prototype &bull; Vanilla JS &amp; Supabase
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config/supabase.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const client = window.getSupabaseClient ? window.getSupabaseClient() : null;
+      if (!client) return;
+
+      const voterBtns = document.querySelectorAll('a[href*="voter/"]');
+      const adminBtns = document.querySelectorAll('a[href*="admin/"]');
+
+      // Check current Supabase auth session
+      const session = await window.getCurrentSession();
+
+      if (!session) {
+        // Unauthenticated visitor -> Admin Gateway directs to admin/login.html, Voter Gateway to auth/login.html
+        voterBtns.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = 'auth/login.html';
+          });
+        });
+        adminBtns.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = 'admin/login.html';
+          });
+        });
+      } else {
+        // Authenticated user -> check role
+        const profile = await window.getUserProfile(session.user.id);
+        
+        if (profile && profile.role === 'admin') {
+          adminBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.preventDefault();
+              window.location.href = 'admin/dashboard.html';
+            });
+          });
+          voterBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.preventDefault();
+              window.location.href = 'admin/dashboard.html';
+            });
+          });
+        } else {
+          voterBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.preventDefault();
+              window.location.href = 'voter/dashboard.html';
+            });
+          });
+          adminBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.preventDefault();
+              window.location.href = 'admin/login.html';
+            });
+          });
+        }
+      }
+    });
+  </script>
+</body>
+</html>

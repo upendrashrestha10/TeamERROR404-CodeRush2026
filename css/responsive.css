@@ -1,0 +1,95 @@
+/* ==========================================================================
+   E-CHUNAB - Responsive Styles (responsive.css)
+   Breakpoints: Mobile (< 768px), Tablet (768px - 1024px), Desktop (> 1024px)
+   ========================================================================== */
+
+/* Mobile Overlay for Sidebar */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 35;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+@media (max-width: 992px) {
+  /* Sidebar Drawer Behavior */
+  .app-sidebar {
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .app-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+  }
+
+  .app-main {
+    margin-left: 0;
+  }
+
+  .sidebar-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .content-body {
+    padding: 20px 16px;
+  }
+
+  .app-topbar {
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1.1rem; }
+
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .doc-modal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .voter-detail-list {
+    grid-template-columns: 1fr;
+  }
+
+  .candidate-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-card {
+    padding: 24px 20px;
+  }
+
+  .admin-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-input-wrapper {
+    min-width: 100%;
+  }
+
+  .table th, .table td {
+    padding: 10px 12px;
+  }
+
+  .modal-container {
+    width: 95%;
+    max-height: 85vh;
+  }
+}

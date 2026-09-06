@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
+  <defs>
+    <linearGradient id="primaryGrad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#dc2626"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Shield/Rounded Box -->
+  <rect x="3" y="3" width="42" height="42" rx="12" fill="url(#primaryGrad)" />
+  <!-- Inner Border Glow -->
+  <rect x="4.5" y="4.5" width="39" height="39" rx="10.5" stroke="white" stroke-opacity="0.2" stroke-width="1.5" />
+  
+  <!-- Digital Ballot Box Icon -->
+  <path d="M12 20C12 17.7909 13.7909 16 16 16H32C34.2091 16 36 17.7909 36 20V32C36 34.2091 34.2091 36 32 36H16C13.7909 36 12 34.2091 12 32V20Z" fill="white" fill-opacity="0.1" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Slot -->
+  <path d="M19 16V13C19 12.4477 19.4477 12 20 12H28C28.5523 12 29 12.4477 29 13V16" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <!-- Check Mark / Vote Token in Crimson Accent -->
+  <circle cx="24" cy="26" r="6" fill="url(#accentGrad)" />
+  <path d="M22 26L23.5 27.5L26.5 24.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voter Profile | E-CHUNAB</title>
+  <meta name="description" content="View and manage voter profile and verification details.">
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/voter.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <aside class="app-sidebar">
+      <div class="sidebar-brand">
+        <img src="../assets/images/logo.svg" alt="E-CHUNAB" width="36" height="36">
+        <div>
+          <div class="brand-text">E-CHUNAB</div>
+          <div class="brand-badge">Voter Portal</div>
+        </div>
+      </div>
+
+      <ul class="sidebar-menu">
+        <li class="sidebar-menu-item">
+          <a href="dashboard.html">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+            </svg>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="vote.html">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+            </svg>
+            <span>Vote</span>
+          </a>
+        </li>
+        <li class="sidebar-menu-item">
+          <a href="results.html">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            <span>Results</span>
+          </a>
+        </li>
+        <li class="sidebar-menu-item active">
+          <a href="profile.html">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+            <span>Profile</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user-card">
+          <div class="sidebar-user-avatar">V</div>
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-name">Civic Voter</div>
+            <div class="sidebar-user-role">Verified Voter</div>
+          </div>
+          <button class="action-logout" title="Sign Out" style="background:none; border:none; color:var(--gray-400); cursor:pointer; padding:4px;">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="app-main">
+      <header class="app-topbar">
+        <div class="topbar-left">
+          <button class="sidebar-toggle-btn" aria-label="Toggle navigation">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+          <div class="topbar-title">Voter Profile</div>
+        </div>
+      </header>
+
+      <main class="content-body">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+          <!-- Personal Details -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Personal Credentials</h3>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" id="profile-fullname" class="form-control" value="Aarav Sharma" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Registered Email</label>
+              <input type="email" id="profile-email" class="form-control" value="voter@echunab.gov.np" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+              <input type="tel" id="profile-phone" class="form-control" value="+977 9812345678" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label">System Role</label>
+              <span class="badge badge-approved">Voter</span>
+            </div>
+          </div>
+
+          <!-- Citizenship Verification Summary -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Citizenship Verification Record</h3>
+            </div>
+            <div class="voter-detail-list">
+              <div class="voter-detail-item">
+                <span class="label">Status</span>
+                <span class="value" id="profile-voter-status" style="font-weight: 700;">Loading...</span>
+              </div>
+              <div class="voter-detail-item">
+                <span class="label">Certificate No.</span>
+                <span class="value" id="profile-voter-citizno">—</span>
+              </div>
+              <div class="voter-detail-item">
+                <span class="label">Date of Birth</span>
+                <span class="value" id="profile-voter-dob">—</span>
+              </div>
+              <div class="voter-detail-item">
+                <span class="label">Address</span>
+                <span class="value" id="profile-voter-address">—</span>
+              </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+              <a href="../auth/verification.html" class="btn btn-outline btn-sm">
+                View / Resubmit Documents
+              </a>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../config/supabase.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/voter/profile.js"></script>
+</body>
+</html>

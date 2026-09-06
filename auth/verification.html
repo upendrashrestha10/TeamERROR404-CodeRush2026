@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citizenship Verification | E-CHUNAB</title>
+  <meta name="description" content="Submit national citizenship credentials for election verification.">
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/auth.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+
+  <div class="auth-wrapper" style="align-items: flex-start;">
+    <div class="auth-container" style="max-width: 640px; margin: 40px auto;">
+      <div class="auth-card">
+        <div class="auth-header">
+          <div class="auth-logo">
+            <a href="../index.html">
+              <img src="../assets/images/logo.svg" alt="E-CHUNAB" width="56" height="56">
+            </a>
+          </div>
+          <h1 class="auth-title">Voter Verification</h1>
+          <p class="auth-subtitle">Verify your identity with national citizenship records to unlock voting</p>
+        </div>
+
+        <!-- Verification State Banner -->
+        <div id="verification-status-display" class="verification-status-banner pending" style="display: none;">
+          <div>
+            <div id="status-display-title" style="font-weight: 700; font-size: 0.95rem;">Status: Verification Pending Review</div>
+            <div id="status-display-desc" style="font-size: 0.825rem; margin-top: 4px;">
+              Your documents have been submitted and are undergoing review by the election commission.
+            </div>
+          </div>
+        </div>
+
+        <!-- Rejection Alert Callout (Shown when rejected) -->
+        <div id="rejection-box" style="display: none; margin-bottom: 20px;" class="verification-status-banner rejected">
+          <div>
+            <div style="font-weight: 700; font-size: 0.95rem;">Application Needs Resubmission</div>
+            <div id="rejection-reason-text" style="font-size: 0.825rem; margin-top: 4px;">
+              Reason: Your previous submission was rejected. Please review and resubmit valid credentials.
+            </div>
+          </div>
+        </div>
+
+        <form id="verification-form" onsubmit="event.preventDefault(); submitVerification();">
+          <div class="form-group">
+            <label class="form-label" for="verif-citizenship-no">Citizenship Certificate Number <span class="required">*</span></label>
+            <input type="text" id="verif-citizenship-no" class="form-control" placeholder="e.g. 27-01-79-12345" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label class="form-label" for="verif-dob">Date of Birth <span class="required">*</span></label>
+              <input type="date" id="verif-dob" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="verif-address">Permanent Address <span class="required">*</span></label>
+              <input type="text" id="verif-address" class="form-control" placeholder="Ward No, Municipality, District" required>
+            </div>
+          </div>
+
+          <!-- Document Upload Dropzones -->
+          <div style="margin-top: 10px;">
+            <label class="form-label">Citizenship Document Images (Private Storage) <span class="required">*</span></label>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px;">
+              <!-- Front Side -->
+              <div>
+                <div class="upload-dropzone" id="dropzone-front" onclick="document.getElementById('file-front').click()">
+                  <div class="upload-icon" id="icon-front">📄</div>
+                  <div id="label-front" style="font-weight: 600; font-size: 0.85rem; color: var(--gray-800);">Citizenship Front</div>
+                  <div id="sub-front" style="font-size: 0.75rem; color: var(--gray-500); margin-top: 2px;">Click to select file</div>
+                  <input type="file" id="file-front" accept="image/*,.pdf" style="display: none;">
+                </div>
+              </div>
+
+              <!-- Back Side -->
+              <div>
+                <div class="upload-dropzone" id="dropzone-back" onclick="document.getElementById('file-back').click()">
+                  <div class="upload-icon" id="icon-back">📄</div>
+                  <div id="label-back" style="font-weight: 600; font-size: 0.85rem; color: var(--gray-800);">Citizenship Back</div>
+                  <div id="sub-back" style="font-size: 0.75rem; color: var(--gray-500); margin-top: 2px;">Click to select file</div>
+                  <input type="file" id="file-back" accept="image/*,.pdf" style="display: none;">
+                </div>
+              </div>
+            </div>
+            <div class="form-hint" style="margin-top: 8px;">Files are stored securely in private encrypted storage. Only election officials can audit.</div>
+          </div>
+
+          <div class="form-group" style="margin-top: 28px;">
+            <button type="submit" id="btn-submit-verification" class="btn btn-primary" style="width: 100%;">
+              Submit Documents for Verification
+            </button>
+          </div>
+        </form>
+
+        <div class="auth-footer" style="margin-top: 20px;">
+          <a href="../voter/dashboard.html">&larr; Return to Voter Dashboard</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../config/supabase.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    let currentUser = null;
+    let existingVoterRecord = null;
+    let fileFrontSelected = null;
+    let fileBackSelected = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const client = window.getSupabaseClient ? window.getSupabaseClient() : null;
+      if (!client) {
+        if (window.showToast) showToast('error', 'Error', 'Supabase client not initialized.');
+        return;
+      }
+
+      // Check session
+      const { data: { session } } = await client.auth.getSession();
+      if (!session) {
+        window.location.href = 'login.html';
+        return;
+      }
+      currentUser = session.user;
+
+      // Handle file input changes for front and back
+      const frontInput = document.getElementById('file-front');
+      frontInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          fileFrontSelected = e.target.files[0];
+          document.getElementById('label-front').textContent = fileFrontSelected.name;
+          document.getElementById('sub-front').textContent = `${(fileFrontSelected.size / 1024).toFixed(1)} KB (Ready)`;
+          document.getElementById('dropzone-front').style.borderColor = 'var(--primary-600)';
+        }
+      });
+
+      const backInput = document.getElementById('file-back');
+      backInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          fileBackSelected = e.target.files[0];
+          document.getElementById('label-back').textContent = fileBackSelected.name;
+          document.getElementById('sub-back').textContent = `${(fileBackSelected.size / 1024).toFixed(1)} KB (Ready)`;
+          document.getElementById('dropzone-back').style.borderColor = 'var(--primary-600)';
+        }
+      });
+
+      // Load existing verification record if any
+      await loadExistingVerification(client, currentUser.id);
+    });
+
+    async function loadExistingVerification(client, userId) {
+      try {
+        const { data, error } = await client
+          .from('voters')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (!data) return; // First time submission
+
+        existingVoterRecord = data;
+
+        // Populate form fields
+        document.getElementById('verif-citizenship-no').value = data.citizenship_number || '';
+        document.getElementById('verif-dob').value = data.date_of_birth || '';
+        document.getElementById('verif-address').value = data.address || '';
+
+        const statusBanner = document.getElementById('verification-status-display');
+        const statusTitle = document.getElementById('status-display-title');
+        const statusDesc = document.getElementById('status-display-desc');
+        const rejectionBox = document.getElementById('rejection-box');
+        const submitBtn = document.getElementById('btn-submit-verification');
+
+        if (data.verification_status === 'approved') {
+          statusBanner.className = 'verification-status-banner approved';
+          statusBanner.style.display = 'flex';
+          statusTitle.textContent = 'Status: Verification Approved ✓';
+          statusDesc.textContent = 'Your citizenship verification has been approved by the election commission. You are fully eligible to vote in active elections.';
+          submitBtn.style.display = 'none';
+          document.getElementById('verif-citizenship-no').disabled = true;
+          document.getElementById('verif-dob').disabled = true;
+          document.getElementById('verif-address').disabled = true;
+        } else if (data.verification_status === 'pending') {
+          statusBanner.className = 'verification-status-banner pending';
+          statusBanner.style.display = 'flex';
+          statusTitle.textContent = 'Status: Verification Pending Review ⏳';
+          statusDesc.textContent = 'Your documents have been submitted and are undergoing review by election officials. Please check back shortly.';
+          submitBtn.textContent = 'Update Submitted Documents';
+        } else if (data.verification_status === 'rejected') {
+          rejectionBox.style.display = 'flex';
+          document.getElementById('rejection-reason-text').textContent = `Reason: ${data.rejection_reason || 'Document does not meet requirements.'}`;
+          submitBtn.textContent = 'Resubmit Documents for Review';
+        }
+      } catch (err) {
+        console.error('[Load Verification Error]', err);
+      }
+    }
+
+    async function submitVerification() {
+      const client = window.getSupabaseClient();
+      const submitBtn = document.getElementById('btn-submit-verification');
+      const citizNo = document.getElementById('verif-citizenship-no').value.trim();
+      const dob = document.getElementById('verif-dob').value;
+      const address = document.getElementById('verif-address').value.trim();
+
+      if (!citizNo || !dob || !address) {
+        if (window.showToast) showToast('warning', 'Validation', 'Please fill in all identity fields.');
+        return;
+      }
+
+      // Check age >= 18
+      const dobDate = new Date(dob);
+      const ageDiff = new Date(Date.now() - dobDate.getTime());
+      const age = Math.abs(ageDiff.getUTCFullYear() - 1970);
+      if (age < 18) {
+        if (window.showToast) showToast('error', 'Eligibility', 'You must be at least 18 years of age to register as a voter.');
+        return;
+      }
+
+      // Files validation
+      let frontPath = existingVoterRecord?.citizenship_front;
+      let backPath = existingVoterRecord?.citizenship_back;
+
+      if (!frontPath && !fileFrontSelected) {
+        if (window.showToast) showToast('warning', 'Document Required', 'Please select your citizenship front card image.');
+        return;
+      }
+      if (!backPath && !fileBackSelected) {
+        if (window.showToast) showToast('warning', 'Document Required', 'Please select your citizenship back card image.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = 'Uploading & Encrypting...';
+
+      try {
+        const timestamp = Date.now();
+
+        // 1. Upload Front document if newly selected
+        if (fileFrontSelected) {
+          const ext = fileFrontSelected.name.split('.').pop() || 'jpg';
+          const filePath = `${currentUser.id}/front_${timestamp}.${ext}`;
+          const { error: upErr } = await client.storage
+            .from('citizenship-docs')
+            .upload(filePath, fileFrontSelected, { upsert: true });
+
+          if (upErr) throw upErr;
+          frontPath = filePath;
+        }
+
+        // 2. Upload Back document if newly selected
+        if (fileBackSelected) {
+          const ext = fileBackSelected.name.split('.').pop() || 'jpg';
+          const filePath = `${currentUser.id}/back_${timestamp}.${ext}`;
+          const { error: upErr } = await client.storage
+            .from('citizenship-docs')
+            .upload(filePath, fileBackSelected, { upsert: true });
+
+          if (upErr) throw upErr;
+          backPath = filePath;
+        }
+
+        submitBtn.textContent = 'Saving Record...';
+
+        // 3. Upsert voter record in public.voters
+        if (existingVoterRecord) {
+          const { error: updErr } = await client
+            .from('voters')
+            .update({
+              citizenship_number: citizNo,
+              date_of_birth: dob,
+              address: address,
+              citizenship_front: frontPath,
+              citizenship_back: backPath,
+              verification_status: 'pending',
+              rejection_reason: null
+            })
+            .eq('user_id', currentUser.id);
+
+          if (updErr) throw updErr;
+        } else {
+          const { error: insErr } = await client
+            .from('voters')
+            .insert({
+              user_id: currentUser.id,
+              citizenship_number: citizNo,
+              date_of_birth: dob,
+              address: address,
+              citizenship_front: frontPath,
+              citizenship_back: backPath,
+              verification_status: 'pending'
+            });
+
+          if (insErr) throw insErr;
+        }
+
+        if (window.showToast) {
+          showToast('success', 'Submitted', 'Citizenship verification documents submitted successfully! Status is now Pending Review.');
+        }
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 1200);
+
+      } catch (err) {
+        console.error('[Verification Submission Error]', err);
+        let msg = err.message || 'Failed to submit verification.';
+        if (msg.includes('citizenship_number') || msg.includes('unique')) {
+          msg = 'This citizenship number is already registered to another voter.';
+        }
+        if (window.showToast) {
+          showToast('error', 'Submission Failed', msg);
+        }
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    }
+  </script>
+</body>
+</html>

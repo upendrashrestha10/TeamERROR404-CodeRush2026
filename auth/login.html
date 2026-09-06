@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | E-CHUNAB</title>
+  <meta name="description" content="Sign in to your E-Chunab account.">
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/auth.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+
+  <div class="auth-wrapper">
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="auth-header">
+          <div class="auth-logo">
+            <a href="../index.html">
+              <img src="../assets/images/logo.svg" alt="E-CHUNAB" width="56" height="56">
+            </a>
+          </div>
+          <h1 class="auth-title">Welcome Back</h1>
+          <p class="auth-subtitle">Sign in to access your digital voter or admin portal</p>
+        </div>
+
+        <form id="login-form" onsubmit="event.preventDefault(); handleLogin();">
+          <div class="form-group">
+            <label class="form-label" for="login-email">Email Address <span class="required">*</span></label>
+            <input type="email" id="login-email" class="form-control" placeholder="voter@echunab.gov.np" required>
+          </div>
+
+          <div class="form-group">
+            <div class="flex-between" style="margin-bottom: 6px;">
+              <label class="form-label" for="login-password" style="margin-bottom: 0;">Password <span class="required">*</span></label>
+            </div>
+            <input type="password" id="login-password" class="form-control" placeholder="••••••••••••" required>
+          </div>
+
+          <div class="form-group" style="margin-top: 24px;">
+            <button type="submit" id="btn-login-submit" class="btn btn-primary" style="width: 100%;">
+              Sign In to Portal
+            </button>
+          </div>
+        </form>
+
+        <div class="auth-divider">
+          <span>or</span>
+        </div>
+
+        <div class="auth-footer">
+          Don't have an account? <a href="register.html" class="font-bold">Register as a Voter</a>
+          <div style="margin-top: 14px;">
+            <a href="../index.html" style="color: var(--gray-500); font-size: 0.8rem;">&larr; Return to Homepage</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../config/supabase.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    async function handleLogin() {
+      const submitBtn = document.getElementById('btn-login-submit');
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      if (!email || !password) {
+        if (window.showToast) showToast('warning', 'Validation', 'Please provide both email and password.');
+        return;
+      }
+
+      const client = window.getSupabaseClient ? window.getSupabaseClient() : null;
+      if (!client) {
+        if (window.showToast) showToast('error', 'Configuration Error', 'Unable to connect to Supabase authentication.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = 'Signing In...';
+
+      try {
+        const { data, error } = await client.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+
+        if (error) throw error;
+
+        // Fetch user's profile to route based on civic role
+        const { data: profile, error: profErr } = await client
+          .from('profiles')
+          .select('role, full_name')
+          .eq('id', data.user.id)
+          .single();
+
+        if (window.showToast) {
+          showToast('success', 'Authenticated', `Welcome back, ${profile?.full_name || 'Voter'}!`);
+        }
+
+        setTimeout(() => {
+          if (profile && profile.role === 'admin') {
+            window.location.href = '../admin/dashboard.html';
+          } else {
+            window.location.href = '../voter/dashboard.html';
+          }
+        }, 800);
+
+      } catch (err) {
+        console.error('[Login Error]', err);
+        let msg = err.message || 'Invalid email or password.';
+        if (msg.toLowerCase().includes('invalid login credentials')) {
+          msg = 'Invalid email or password. Please verify your credentials.';
+        }
+        if (window.showToast) {
+          showToast('error', 'Sign In Failed', msg);
+        }
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    }
+  </script>
+</body>
+</html>

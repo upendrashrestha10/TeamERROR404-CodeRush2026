@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login | E-CHUNAB</title>
+  <meta name="description" content="Sign in to the E-Chunab Electoral Commission & Administrative Portal.">
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/auth.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+</head>
+<body>
+
+  <div class="auth-wrapper">
+    <div class="auth-container">
+      <div class="auth-card" style="border-top: 4px solid var(--accent-red-600);">
+        <div class="auth-header">
+          <div class="auth-logo">
+            <a href="../index.html">
+              <img src="../assets/images/logo.svg" alt="E-CHUNAB" width="56" height="56">
+            </a>
+          </div>
+          <span class="badge badge-active" style="margin-bottom: 12px; background: rgba(220, 38, 38, 0.1); color: var(--accent-red-600); border-color: rgba(220, 38, 38, 0.3);">
+            <span class="badge-dot" style="background: var(--accent-red-600);"></span>Commission Portal
+          </span>
+          <h1 class="auth-title">Administrator Sign In</h1>
+          <p class="auth-subtitle">Authorized Electoral Commission Personnel Only</p>
+        </div>
+
+        <form id="admin-login-form" onsubmit="event.preventDefault(); handleAdminLogin();">
+          <div class="form-group">
+            <label class="form-label" for="admin-email">Admin Email Address <span class="required">*</span></label>
+            <input type="email" id="admin-email" class="form-control" placeholder="admin@e-chunab.com" required>
+          </div>
+
+          <div class="form-group">
+            <div class="flex-between" style="margin-bottom: 6px;">
+              <label class="form-label" for="admin-password" style="margin-bottom: 0;">Master Password <span class="required">*</span></label>
+            </div>
+            <input type="password" id="admin-password" class="form-control" placeholder="••••••••••••" required>
+          </div>
+
+          <div class="form-group" style="margin-top: 24px;">
+            <button type="submit" id="btn-admin-login-submit" class="btn btn-accent" style="width: 100%; background: var(--accent-red-600); border-color: var(--accent-red-600);">
+              Authenticate Admin Access
+            </button>
+          </div>
+        </form>
+
+        <div class="auth-divider">
+          <span>&bull;</span>
+        </div>
+
+        <div class="auth-footer">
+          Voter searching for your ballot portal? <a href="../auth/login.html" class="font-bold">Voter Sign In</a>
+          <div style="margin-top: 14px;">
+            <a href="../index.html" style="color: var(--gray-500); font-size: 0.8rem;">&larr; Return to Homepage</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../config/supabase.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/admin/login.js"></script>
+</body>
+</html>
