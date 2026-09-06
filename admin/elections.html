@@ -199,6 +199,35 @@
     </div>
   </div>
 
+  <!-- Delete Election Confirmation Modal -->
+  <div class="modal-backdrop" id="delete-election-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title" style="color: var(--accent-red-600);">Delete Election?</h3>
+        <button class="modal-close-btn" onclick="closeModal('delete-election-modal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.95rem; font-weight: 600; color: var(--gray-900); margin-bottom: 8px;" id="delete-election-name">--</p>
+        <p style="font-size: 0.875rem; color: var(--gray-600); line-height: 1.5; margin-bottom: 8px;">
+          Deleting this election will permanently remove:
+        </p>
+        <ul style="font-size: 0.85rem; color: var(--gray-600); margin: 0 0 16px 20px; line-height: 1.6;">
+          <li>Election information & metadata</li>
+          <li>Contested positions</li>
+          <li>Nominated candidates</li>
+          <li>Voting records and tallies</li>
+        </ul>
+        <div style="background: rgba(220, 38, 38, 0.08); border: 1px solid rgba(220, 38, 38, 0.2); border-radius: var(--radius-sm); padding: 12px; font-size: 0.8rem; color: var(--accent-red-600);">
+          ⚠️ <strong>Warning:</strong> This action cannot be undone.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('delete-election-modal')">Cancel</button>
+        <button type="button" id="btn-confirm-delete-election" class="btn btn-accent" style="background: var(--accent-red-600); border-color: var(--accent-red-600);">Delete Election</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../config/supabase.js"></script>

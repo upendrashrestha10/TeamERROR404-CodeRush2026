@@ -1,7 +1,10 @@
 /**
  * E-CHUNAB - Admin Election Lifecycle Management (js/admin/elections.js)
- * Module: Create, edit, activate, complete elections dynamically from Supabase
+ * Module: Create, edit, activate, complete, and delete elections dynamically from Supabase
+ * Enforces security rules: Active/Upcoming elections CANNOT be deleted.
  */
+
+let pendingDeleteId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('[Admin Elections] Initializing...');
@@ -26,6 +29,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const saveElectionBtn = document.getElementById('btn-save-election');
   if (saveElectionBtn) {
     saveElectionBtn.addEventListener('click', () => handleCreateElection(client));
+  }
+
+  const confirmDeleteBtn = document.getElementById('btn-confirm-delete-election');
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener('click', () => executeDeleteElection(client));
   }
 
   // Load elections from database
@@ -76,29 +84,46 @@ async function loadElections(client) {
       const isActive = elec.status === 'active';
       const isCompleted = elec.status === 'completed';
       const isDraft = elec.status === 'draft';
+      const isUpcoming = elec.status === 'upcoming';
 
       let badgeHtml = '';
       if (isActive) {
         badgeHtml = '<span class="badge badge-active"><span class="badge-dot"></span>Active</span>';
       } else if (isCompleted) {
         badgeHtml = '<span class="badge badge-approved"><span class="badge-dot"></span>Completed</span>';
+      } else if (isUpcoming) {
+        badgeHtml = '<span class="badge badge-pending"><span class="badge-dot"></span>Upcoming</span>';
       } else {
         badgeHtml = '<span class="badge badge-draft"><span class="badge-dot"></span>Draft</span>';
       }
 
       let actionsHtml = '';
+
       if (isDraft) {
+        actionsHtml = `
+          <button class="btn btn-primary btn-sm" onclick="setElectionStatus('${elec.id}', 'active')">Activate</button>
+          <button class="btn btn-outline btn-sm" style="color: var(--accent-red-600);" onclick="promptDeleteElection('${elec.id}', '${window.escapeHTML(elec.title)}')">Delete</button>
+        `;
+      } else if (isUpcoming) {
+        // Upcoming elections cannot be deleted
         actionsHtml = `
           <button class="btn btn-primary btn-sm" onclick="setElectionStatus('${elec.id}', 'active')">Activate</button>
         `;
       } else if (isActive) {
+        // Active elections cannot be deleted
         actionsHtml = `
           <button class="btn btn-accent btn-sm" onclick="setElectionStatus('${elec.id}', 'completed')">Complete Election</button>
         `;
       } else if (isCompleted) {
-        actionsHtml = elec.results_published 
+        // Completed elections can be deleted by Admin
+        const pubBtn = elec.results_published 
           ? `<span class="badge badge-approved">Results Published</span>`
           : `<button class="btn btn-primary btn-sm" onclick="publishResults('${elec.id}')">Publish Results</button>`;
+
+        actionsHtml = `
+          ${pubBtn}
+          <button class="btn btn-outline btn-sm" style="color: var(--accent-red-600); border-color: rgba(220,38,38,0.3);" onclick="promptDeleteElection('${elec.id}', '${window.escapeHTML(elec.title)}')">Delete</button>
+        `;
       }
 
       const cardClass = isActive ? 'card election-control-card active' : 'card election-control-card';
@@ -220,5 +245,65 @@ async function publishResults(electionId) {
   }
 }
 
+function promptDeleteElection(electionId, title) {
+  pendingDeleteId = electionId;
+  const nameEl = document.getElementById('delete-election-name');
+  if (nameEl) nameEl.textContent = `Election Title: "${title}"`;
+
+  if (window.openModal) {
+    window.openModal('delete-election-modal');
+  } else {
+    // Fallback confirmation
+    if (confirm(`Are you sure you want to delete election "${title}"? This will permanently remove positions, candidates, and votes.`)) {
+      executeDeleteElection(window.getSupabaseClient());
+    }
+  }
+}
+
+async function executeDeleteElection(client) {
+  if (!client) client = window.getSupabaseClient ? window.getSupabaseClient() : null;
+  if (!client || !pendingDeleteId) return;
+
+  const btn = document.getElementById('btn-confirm-delete-election');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Deleting...';
+  }
+
+  try {
+    // Call atomic RPC delete_completed_election(p_election_id)
+    const { data: res, error } = await client.rpc('delete_completed_election', {
+      p_election_id: pendingDeleteId
+    });
+
+    if (error) throw error;
+
+    if (window.closeModal) window.closeModal('delete-election-modal');
+
+    if (window.showToast) {
+      showToast('success', 'Election Deleted', res?.message || 'Election deleted successfully.');
+    }
+
+    pendingDeleteId = null;
+
+    // Reload list
+    await loadElections(client);
+
+  } catch (err) {
+    console.error('[Delete Election Error]', err);
+    let errorMsg = err.message || 'Failed to delete election.';
+    if (window.showToast) {
+      showToast('error', 'Deletion Failed', errorMsg);
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Delete Election';
+    }
+  }
+}
+
 window.setElectionStatus = setElectionStatus;
 window.publishResults = publishResults;
+window.promptDeleteElection = promptDeleteElection;
+window.executeDeleteElection = executeDeleteElection;
