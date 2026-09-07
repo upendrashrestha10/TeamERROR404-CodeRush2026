@@ -304,9 +304,10 @@
         return;
       }
 
-      if (!session.user.email_confirmed_at) {
+      if (!window.isEmailOtpVerified || !window.isEmailOtpVerified(session.user)) {
         if (session.user.email) {
           sessionStorage.setItem('pendingVerificationEmail', session.user.email);
+          sessionStorage.setItem('echunab_dummy_otp_email', session.user.email);
         }
         window.location.href = 'otp.html';
         return;

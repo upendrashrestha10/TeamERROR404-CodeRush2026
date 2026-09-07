@@ -56,6 +56,26 @@ async function getVoterVerification(userId) {
 }
 
 /**
+ * Checks whether user email OTP verification requirement is satisfied
+ * Handles real email_confirmed_at or local dummy OTP verification state
+ */
+function isEmailOtpVerified(user) {
+  if (!user) return false;
+  if (user.email_confirmed_at) return true;
+
+  const isDemoMode = (window.ECHUNAB_CONFIG && (window.ECHUNAB_CONFIG.DUMMY_OTP_MODE === true || window.ECHUNAB_CONFIG.DEMO_OTP_MODE === true)) || (typeof ECHUNAB_CONFIG !== 'undefined' && (ECHUNAB_CONFIG.DUMMY_OTP_MODE === true || ECHUNAB_CONFIG.DEMO_OTP_MODE === true));
+  if (isDemoMode) {
+    const isVerified = sessionStorage.getItem('echunab_dummy_otp_verified') === 'true' || sessionStorage.getItem('echunab_demo_verified') === 'true';
+    const verifiedEmail = (sessionStorage.getItem('echunab_dummy_otp_email') || sessionStorage.getItem('echunab_demo_verified_email') || '').trim().toLowerCase();
+    const currentEmail = (user.email || '').trim().toLowerCase();
+    if (isVerified && verifiedEmail && currentEmail && verifiedEmail === currentEmail) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Route protection guard for authenticated pages
  * @param {'voter'|'admin'} requiredRole 
  */
@@ -84,14 +104,12 @@ async function protectPage(requiredRole = null) {
 
   // Check email confirmation status for voter role
   const isOtpPage = window.location.pathname.includes('/auth/otp.html');
-  const isDemoMode = window.ECHUNAB_CONFIG && window.ECHUNAB_CONFIG.DEMO_OTP_MODE === true;
-  const demoVerifiedEmail = sessionStorage.getItem('echunab_demo_verified_email');
-  const isDemoVerified = isDemoMode && demoVerifiedEmail && session.user && session.user.email && (demoVerifiedEmail === session.user.email.toLowerCase());
 
-  if (session.user && !session.user.email_confirmed_at && !isDemoVerified && userRole === 'voter' && !isAdminPath) {
+  if (session.user && !isEmailOtpVerified(session.user) && userRole === 'voter' && !isAdminPath) {
     if (!isOtpPage) {
       if (session.user.email) {
         sessionStorage.setItem('pendingVerificationEmail', session.user.email);
+        sessionStorage.setItem('echunab_dummy_otp_email', session.user.email);
       }
       window.location.href = isVoterPath ? '../auth/otp.html' : (window.location.pathname.includes('/auth/') ? 'otp.html' : 'auth/otp.html');
       return null;
@@ -152,3 +170,4 @@ window.getUserProfile = getUserProfile;
 window.getVoterVerification = getVoterVerification;
 window.protectPage = protectPage;
 window.signOutUser = signOutUser;
+window.isEmailOtpVerified = isEmailOtpVerified;

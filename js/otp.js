@@ -1,72 +1,73 @@
 /**
  * E-CHUNAB - Email OTP Verification (js/otp.js)
- * Handles 6-digit OTP input, Supabase Auth verifyOtp(), resend cooldown, and user feedback
+ * Fully local/dummy OTP verification for demo environment.
+ * Fixed Demo OTP: 273283
  */
 
 let pendingEmail = '';
-let resendTimer = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('[OTP] Initializing email verification page...');
+  console.log('[OTP] Initializing dummy email verification page...');
 
-  // 0. Manage Demo OTP Banner Visibility
+  // 0. Ensure Demo Banner Visibility
   const demoBanner = document.getElementById('demo-otp-banner');
-  const isDemoModeEnabled = window.ECHUNAB_CONFIG && window.ECHUNAB_CONFIG.DEMO_OTP_MODE === true;
   if (demoBanner) {
-    if (isDemoModeEnabled) {
-      demoBanner.style.display = 'block';
-      console.warn('[E-Chunab Security Notice] DEMO_OTP_MODE is ENABLED. Real email verification fallback active for testing.');
-    } else {
-      demoBanner.style.display = 'none';
-    }
+    demoBanner.style.display = 'block';
   }
 
+  // 1. Resolve Target Registration Email (from sessionStorage or active Supabase session)
+  pendingEmail = (
+    sessionStorage.getItem('echunab_dummy_otp_email') ||
+    sessionStorage.getItem('pendingVerificationEmail') ||
+    sessionStorage.getItem('echunab_demo_otp_email') ||
+    ''
+  ).trim().toLowerCase();
+
   const client = window.getSupabaseClient ? window.getSupabaseClient() : null;
-  if (!client) return;
 
-  // 1. Resolve Target Email (from sessionStorage or active unverified Supabase session)
-  pendingEmail = sessionStorage.getItem('pendingVerificationEmail') || '';
-
-  if (!pendingEmail) {
-    // Check if user is currently signed in but email is unconfirmed
+  if (!pendingEmail && client) {
     try {
       const { data: { session } } = await client.auth.getSession();
-      if (session && session.user && !session.user.email_confirmed_at) {
-        pendingEmail = session.user.email;
+      if (session && session.user) {
+        pendingEmail = session.user.email.trim().toLowerCase();
       }
     } catch (e) {
       console.warn('[OTP] Error fetching session user email:', e);
     }
   }
 
+  // Page Guard: If no registration context exists, redirect to registration (Requirement 27)
+  if (!pendingEmail) {
+    console.warn('[OTP] Registration session not found.');
+    const maskedText = document.getElementById('masked-email-text');
+    if (maskedText) maskedText.textContent = 'Session not found';
+    if (window.showToast) {
+      showToast('error', 'Session Missing', 'Registration session not found. Please register again.');
+    }
+    setTimeout(() => {
+      window.location.href = 'register.html';
+    }, 1500);
+    return;
+  }
+
   // Display masked email in UI
   const maskedText = document.getElementById('masked-email-text');
-  if (maskedText) {
-    if (pendingEmail) {
-      maskedText.textContent = maskEmail(pendingEmail);
-    } else {
-      maskedText.textContent = 'No pending email found';
-      if (window.showToast) {
-        showToast('warning', 'Notice', 'Verification email information is missing. Please register or log in.');
-      }
-    }
+  if (maskedText && pendingEmail) {
+    maskedText.textContent = maskEmail(pendingEmail);
   }
 
   // 2. Setup 6-digit OTP Input Box Behaviors
   setupOTPBoxes();
 
-  // 3. Setup Resend Button Handler
+  // 3. Setup Demo OTP Button Handler
   const resendBtn = document.getElementById('btn-resend-otp');
   if (resendBtn) {
     resendBtn.addEventListener('click', handleResendOTP);
   }
-
-  // Start initial resend cooldown timer (60s)
-  startResendCooldown(60);
 });
 
 /**
- * Mask Email for UI Privacy (Requirement 19)
+ * Mask Email for UI Privacy
  * e.g., "upendra@gmail.com" -> "u******@gmail.com"
  */
 function maskEmail(email) {
@@ -80,7 +81,7 @@ function maskEmail(email) {
 }
 
 /**
- * Setup 6-digit OTP Input Box Behaviors (Requirement 7 & 47)
+ * Setup 6-digit OTP Input Box Behaviors (Requirement 7)
  */
 function setupOTPBoxes() {
   const boxes = document.querySelectorAll('.otp-box');
@@ -137,26 +138,37 @@ function setupOTPBoxes() {
 }
 
 /**
- * Verify OTP Token via Supabase Auth (Requirement 8, 9, 16, 17)
+ * Perform Local Dummy OTP Verification (Requirements 4, 8, 9, 10, 11, 12)
+ * Fixed OTP: 273283
+ * DOES NOT call Supabase verifyOtp() API.
  */
 async function handleVerifyOTP() {
   const boxes = document.querySelectorAll('.otp-box');
   let token = '';
   boxes.forEach(box => { token += box.value.trim(); });
 
-  if (token.length !== 6) {
-    if (window.showToast) showToast('warning', 'Validation', 'Please enter the full 6-digit verification code.');
+  // Requirement 10: Check empty or missing input
+  if (!token) {
+    if (window.showToast) {
+      showToast('warning', 'Validation', 'Please enter the OTP.');
+    }
     return;
   }
 
-  const client = window.getSupabaseClient ? window.getSupabaseClient() : null;
-  if (!client) {
-    if (window.showToast) showToast('error', 'Error', 'Supabase client not initialized.');
+  // Requirement 7: Check 6 digits
+  if (token.length < 6) {
+    if (window.showToast) {
+      showToast('warning', 'Validation', 'Please enter the full 6-digit verification code.');
+    }
     return;
   }
 
-  if (!pendingEmail) {
-    if (window.showToast) showToast('error', 'Missing Email', 'Verification email is missing. Please register again.');
+  // Requirement 27 & 12: Check registration session email binding
+  const currentNormalizedEmail = (pendingEmail || '').trim().toLowerCase();
+  if (!currentNormalizedEmail) {
+    if (window.showToast) {
+      showToast('error', 'Session Missing', 'Registration session not found. Please register again.');
+    }
     setTimeout(() => { window.location.href = 'register.html'; }, 1500);
     return;
   }
@@ -167,174 +179,69 @@ async function handleVerifyOTP() {
     submitBtn.textContent = 'Verifying...';
   }
 
-  // 1. Check if Safe Demo OTP Fallback Mode is explicitly enabled
-  const isDemoMode = window.ECHUNAB_CONFIG && window.ECHUNAB_CONFIG.DEMO_OTP_MODE === true;
-  const demoOTPValue = (window.ECHUNAB_CONFIG && window.ECHUNAB_CONFIG.DEMO_OTP) ? window.ECHUNAB_CONFIG.DEMO_OTP : '273283';
+  // Configuration fixed OTP value (273283)
+  const expectedOtp = String(
+    (window.ECHUNAB_CONFIG && (window.ECHUNAB_CONFIG.DUMMY_OTP || window.ECHUNAB_CONFIG.DEMO_OTP)) || '273283'
+  ).trim();
 
-  if (isDemoMode) {
-    if (token === demoOTPValue) {
-      console.log(`[E-Chunab Demo Mode] Demo OTP (${token}) accepted for registration email: ${pendingEmail}`);
-      // Store temporary user-bound demo verification state in sessionStorage
-      sessionStorage.setItem('echunab_demo_verified_email', pendingEmail.toLowerCase());
-      sessionStorage.removeItem('pendingVerificationEmail');
+  const enteredOtp = token.trim();
 
-      if (window.showToast) {
-        showToast('success', 'Email Verified (DEMO MODE) ✓', 'Email verification fallback successful! Redirecting to voter verification...');
-      }
-
-      setTimeout(() => {
-        window.location.href = 'verification.html';
-      }, 1200);
-      return;
-    } else {
-      console.warn(`[E-Chunab Demo Mode] Invalid OTP attempt (${token}). Expected Demo OTP: ${demoOTPValue}`);
-      if (window.showToast) {
-        showToast('error', 'Invalid OTP', 'Invalid OTP. Please check the code and try again.');
-      }
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Verify Email →';
-      }
-      return;
-    }
-  }
-
-  // 2. Real Supabase Auth OTP Verification (Primary Mechanism when DEMO_OTP_MODE is false)
-  try {
-    console.log(`[Supabase Auth] Verifying real OTP token for ${pendingEmail}...`);
-
-    const { data, error } = await client.auth.verifyOtp({
-      email: pendingEmail,
-      token: token,
-      type: 'email'
-    });
-
-    if (error) throw error;
-
-    console.log('[Supabase Auth] OTP verification successful!', data);
-
-    sessionStorage.removeItem('pendingVerificationEmail');
-
+  // Requirement 9: Invalid OTP check
+  if (enteredOtp !== expectedOtp) {
+    console.warn(`[Dummy OTP] Invalid input (${enteredOtp}). Expected: ${expectedOtp}`);
     if (window.showToast) {
-      showToast('success', 'Email Verified ✓', 'Your email has been successfully verified! Redirecting to voter verification...');
+      showToast('error', 'Invalid OTP', 'Invalid OTP. Please enter the correct 6-digit OTP.');
     }
-
-    setTimeout(() => {
-      window.location.href = 'verification.html';
-    }, 1200);
-
-  } catch (err) {
-    console.error('[OTP Verification Error]', err);
-
-    let errorMsg = 'Invalid OTP. Please check the code and try again.';
-    const rawMsg = (err.message || '').toLowerCase();
-
-    if (rawMsg.includes('expired')) {
-      errorMsg = 'This OTP has expired. Please request a new OTP.';
-    } else if (rawMsg.includes('rate limit') || rawMsg.includes('too many') || rawMsg.includes('over_email_send_rate_limit')) {
-      errorMsg = 'Email OTP could not be sent because the email service is temporarily rate-limited. If Demo Mode is enabled for this development environment, you can use the Demo OTP.';
-    } else if (rawMsg.includes('invalid')) {
-      errorMsg = 'Invalid OTP. Please check the code and try again.';
-    }
-
-    if (window.showToast) {
-      showToast('error', 'Verification Failed', errorMsg);
-    }
-  } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Verify Email →';
     }
-  }
-}
-
-/**
- * Resend Verification Code (Requirement 14, 15)
- */
-async function handleResendOTP() {
-  const client = window.getSupabaseClient ? window.getSupabaseClient() : null;
-  if (!client || !pendingEmail) {
-    if (window.showToast) showToast('warning', 'Notice', 'No target email found for resending code.');
     return;
   }
 
-  const isDemoMode = window.ECHUNAB_CONFIG && window.ECHUNAB_CONFIG.DEMO_OTP_MODE === true;
-  if (isDemoMode) {
-    if (window.showToast) {
-      showToast('info', 'DEMO MODE Active', `Demo OTP remains: ${window.ECHUNAB_CONFIG.DEMO_OTP || '273283'}`);
-    }
-    startResendCooldown(60);
-    return;
+  // Requirement 8 & 11: Success behavior & state storage
+  console.log(`[Dummy OTP] Successful local OTP verification for email: ${currentNormalizedEmail}`);
+
+  sessionStorage.setItem('echunab_dummy_otp_verified', 'true');
+  sessionStorage.setItem('echunab_dummy_otp_email', currentNormalizedEmail);
+  sessionStorage.setItem('echunab_demo_verified', 'true');
+  sessionStorage.setItem('echunab_demo_verified_email', currentNormalizedEmail);
+
+  if (window.showToast) {
+    showToast('success', 'Verified', 'Email verification successful.');
   }
 
-  const resendBtn = document.getElementById('btn-resend-otp');
-  if (resendBtn) {
-    resendBtn.disabled = true;
-    resendBtn.textContent = 'Sending...';
-  }
-
-  try {
-    console.log(`[Supabase Auth] Resending signup OTP email to ${pendingEmail}...`);
-
-    const { error } = await client.auth.resend({
-      type: 'signup',
-      email: pendingEmail
-    });
-
-    if (error) throw error;
-
-    if (window.showToast) {
-      showToast('success', 'Code Sent', `Verification code sent to ${maskEmail(pendingEmail)}.`);
-    }
-
-    startResendCooldown(60);
-
-  } catch (err) {
-    console.error('[Resend OTP Error]', err);
-    let msg = 'Failed to resend verification code.';
-    const rawErr = (err.message || '').toLowerCase();
-    if (rawErr.includes('rate limit') || rawErr.includes('over_email_send_rate_limit')) {
-      msg = 'Email OTP could not be sent because the email service is temporarily rate-limited. If Demo Mode is enabled for this development environment, you can use the Demo OTP.';
-    }
-    if (window.showToast) {
-      showToast('error', 'Resend Failed', msg);
-    }
-    if (resendBtn) {
-      resendBtn.disabled = false;
-      resendBtn.textContent = 'Resend Code';
-    }
-  }
-}
-
-/**
- * Resend Cooldown Timer (Requirement 14)
- */
-function startResendCooldown(seconds = 60) {
-  const resendBtn = document.getElementById('btn-resend-otp');
-  const timerText = document.getElementById('resend-timer-text');
-
-  if (!resendBtn) return;
-
-  if (resendTimer) clearInterval(resendTimer);
-
-  let remaining = seconds;
-  resendBtn.disabled = true;
-  resendBtn.textContent = 'Resend Code';
-  if (timerText) timerText.textContent = `(Resend in ${remaining}s)`;
-
-  resendTimer = setInterval(() => {
-    remaining--;
-    if (remaining > 0) {
-      if (timerText) timerText.textContent = `(Resend in ${remaining}s)`;
-    } else {
-      clearInterval(resendTimer);
-      resendTimer = null;
-      resendBtn.disabled = false;
-      if (timerText) timerText.textContent = '';
-    }
+  setTimeout(() => {
+    window.location.href = 'verification.html';
   }, 1000);
 }
 
-// Global functions for onclick bindings
+/**
+ * Handle "Show Demo OTP" button click (Requirement 18)
+ * Auto-fills 273283 into boxes for ease of demo testing.
+ */
+function handleResendOTP() {
+  const expectedOtp = String(
+    (window.ECHUNAB_CONFIG && (window.ECHUNAB_CONFIG.DUMMY_OTP || window.ECHUNAB_CONFIG.DEMO_OTP)) || '273283'
+  ).trim();
+
+  const boxes = document.querySelectorAll('.otp-box');
+  expectedOtp.split('').forEach((digit, idx) => {
+    if (boxes[idx]) {
+      boxes[idx].value = digit;
+      boxes[idx].classList.add('filled');
+    }
+  });
+
+  if (boxes[boxes.length - 1]) {
+    boxes[boxes.length - 1].focus();
+  }
+
+  if (window.showToast) {
+    showToast('info', 'Demo OTP', `Demo OTP (${expectedOtp}) applied.`);
+  }
+}
+
+// Global functions for inline HTML event bindings
 window.handleVerifyOTP = handleVerifyOTP;
 window.handleResendOTP = handleResendOTP;

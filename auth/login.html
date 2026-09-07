@@ -96,11 +96,12 @@
 
         if (error) throw error;
 
-        // Check if voter email is confirmed
-        if (data.user && !data.user.email_confirmed_at) {
+        // Check if voter email OTP verification requirement is satisfied
+        if (data.user && (!window.isEmailOtpVerified || !window.isEmailOtpVerified(data.user))) {
           sessionStorage.setItem('pendingVerificationEmail', email);
+          sessionStorage.setItem('echunab_dummy_otp_email', email);
           if (window.showToast) {
-            showToast('warning', 'Email Unverified', 'Email not verified. Please verify your email before continuing.');
+            showToast('warning', 'Email Unverified', 'Email verification required. Redirecting to OTP verification...');
           }
           setTimeout(() => {
             window.location.href = 'otp.html';

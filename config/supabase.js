@@ -9,7 +9,9 @@
 // Keep DEMO_OTP_MODE false for real email OTP verification.
 // Enable only for local/demo testing when real email delivery is unavailable.
 const ECHUNAB_CONFIG = {
-  DEMO_OTP_MODE: false,
+  DUMMY_OTP_MODE: true,
+  DUMMY_OTP: "273283",
+  DEMO_OTP_MODE: true,
   DEMO_OTP: "273283"
 };
 

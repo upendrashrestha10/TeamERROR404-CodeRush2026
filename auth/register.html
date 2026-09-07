@@ -148,7 +148,11 @@
           return;
         }
 
-        sessionStorage.setItem('pendingVerificationEmail', email);
+        const normalizedEmail = email.trim().toLowerCase();
+        sessionStorage.setItem('pendingVerificationEmail', normalizedEmail);
+        sessionStorage.setItem('echunab_dummy_otp_email', normalizedEmail);
+        sessionStorage.setItem('echunab_demo_otp_email', normalizedEmail);
+        sessionStorage.removeItem('echunab_dummy_otp_verified');
 
         if (window.showToast) {
           showToast('success', 'Account Created', 'Registration successful! Redirecting to email verification...');
