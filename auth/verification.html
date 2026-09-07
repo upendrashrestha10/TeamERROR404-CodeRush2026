@@ -297,13 +297,23 @@
         return;
       }
 
-      // Check session
+      // Check session and email confirmation
       const { data: { session } } = await client.auth.getSession();
       if (!session) {
         window.location.href = 'login.html';
         return;
       }
+
+      if (!session.user.email_confirmed_at) {
+        if (session.user.email) {
+          sessionStorage.setItem('pendingVerificationEmail', session.user.email);
+        }
+        window.location.href = 'otp.html';
+        return;
+      }
+
       currentUser = session.user;
+
 
       // Handle file input changes for front and back citizenship cards
       const frontInput = document.getElementById('file-front');

@@ -121,6 +121,7 @@
       submitBtn.textContent = 'Creating Account...';
 
       try {
+        console.log('[Supabase Auth Diagnostic] Attempting registration for:', email);
         const { data, error } = await client.auth.signUp({
           email: email,
           password: password,
@@ -132,23 +133,39 @@
           }
         });
 
+        console.log('[Supabase Auth Diagnostic] signUp response:', { data, error });
+
         if (error) {
           throw error;
         }
 
+        // Diagnostic Check: Detect existing registered account (Supabase returns error: null & identities: [])
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          console.warn('[Supabase Auth Diagnostic] User already exists (empty identities array).');
+          if (window.showToast) {
+            showToast('error', 'Already Registered', 'An account with this email address already exists. Please log in instead.');
+          }
+          return;
+        }
+
+        sessionStorage.setItem('pendingVerificationEmail', email);
+
         if (window.showToast) {
-          showToast('success', 'Account Created', 'Registration successful! Redirecting to voter verification...');
+          showToast('success', 'Account Created', 'Registration successful! Redirecting to email verification...');
         }
 
         setTimeout(() => {
-          window.location.href = 'verification.html';
-        }, 1200);
+          window.location.href = 'otp.html';
+        }, 1000);
 
       } catch (err) {
-        console.error('[Registration Error]', err);
+        console.error('[Registration Error Diagnostic]', err);
         let msg = err.message || 'An error occurred during registration.';
-        if (msg.toLowerCase().includes('already registered')) {
-          msg = 'An account with this email already exists. Please log in.';
+        const rawErr = (err.message || '').toLowerCase();
+        if (rawErr.includes('already registered') || rawErr.includes('already exists')) {
+          msg = 'An account with this email address already exists. Please log in instead.';
+        } else if (rawErr.includes('rate limit') || rawErr.includes('over_email_send_rate_limit')) {
+          msg = 'Email rate limit exceeded (Built-in Supabase SMTP limit is 3 emails/hour). Please wait before trying again.';
         }
         if (window.showToast) {
           showToast('error', 'Registration Failed', msg);
@@ -160,4 +177,6 @@
     }
   </script>
 </body>
+
+
 </html>

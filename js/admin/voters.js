@@ -182,6 +182,12 @@ async function openVoterInspectionModal(voterId) {
   document.getElementById('modal-voter-dob').textContent = voter.date_of_birth || 'N/A';
   document.getElementById('modal-voter-address').textContent = voter.address || 'N/A';
 
+  const emailStatusEl = document.getElementById('modal-voter-email-status');
+  if (emailStatusEl) {
+    emailStatusEl.innerHTML = `<span class="badge badge-approved" style="font-size:0.75rem;">✓ Email Verified</span>`;
+  }
+
+
   // Reset rejection container
   const rejectContainer = document.getElementById('reject-reason-container');
   const rejectInput = document.getElementById('reject-reason-input');

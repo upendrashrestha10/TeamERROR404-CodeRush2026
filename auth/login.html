@@ -96,6 +96,18 @@
 
         if (error) throw error;
 
+        // Check if voter email is confirmed
+        if (data.user && !data.user.email_confirmed_at) {
+          sessionStorage.setItem('pendingVerificationEmail', email);
+          if (window.showToast) {
+            showToast('warning', 'Email Unverified', 'Email not verified. Please verify your email before continuing.');
+          }
+          setTimeout(() => {
+            window.location.href = 'otp.html';
+          }, 1000);
+          return;
+        }
+
         // Fetch user's profile to route based on civic role
         const { data: profile, error: profErr } = await client
           .from('profiles')
@@ -114,6 +126,7 @@
             window.location.href = '../voter/dashboard.html';
           }
         }, 800);
+
 
       } catch (err) {
         console.error('[Login Error]', err);

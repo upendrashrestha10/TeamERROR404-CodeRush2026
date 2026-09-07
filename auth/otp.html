@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Verification | E-CHUNAB</title>
+  <meta name="description" content="Verify your email address using the OTP code sent to your inbox.">
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/auth.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <style>
+    .otp-input-container {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin: 24px 0;
+    }
+    .otp-box {
+      width: 48px;
+      height: 56px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+      border: 2px solid var(--gray-300);
+      border-radius: var(--radius-md);
+      background: var(--white);
+      color: var(--gray-900);
+      transition: all 0.2s ease;
+    }
+    .otp-box:focus {
+      border-color: var(--primary-600);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+      outline: none;
+      background: var(--primary-50);
+    }
+    .otp-box.filled {
+      border-color: var(--primary-500);
+      background: var(--gray-50);
+    }
+    .resend-container {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--gray-600);
+    }
+    .resend-btn {
+      background: none;
+      border: none;
+      color: var(--primary-600);
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+    }
+    .resend-btn:disabled {
+      color: var(--gray-400);
+      cursor: not-allowed;
+      text-decoration: none;
+    }
+    .email-display-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--gray-100);
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius-full);
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--gray-800);
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-wrapper">
+    <div class="auth-container" style="max-width: 480px;">
+      <div class="auth-card" style="text-align: center;">
+        <div class="auth-header">
+          <div class="auth-logo">
+            <a href="../index.html">
+              <img src="../assets/images/logo.svg" alt="E-CHUNAB" width="56" height="56">
+            </a>
+          </div>
+          <h1 class="auth-title">Verify Your Email</h1>
+          <p class="auth-subtitle">We sent a 6-digit verification code to</p>
+          <div>
+            <span class="email-display-badge" id="display-email">
+              ✉️ <span id="masked-email-text">Loading email...</span>
+            </span>
+          </div>
+        </div>
+
+        <form id="otp-form" onsubmit="event.preventDefault(); handleVerifyOTP();">
+          <div class="otp-input-container">
+            <input type="text" maxlength="1" class="otp-box" data-index="0" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" required autofocus>
+            <input type="text" maxlength="1" class="otp-box" data-index="1" inputmode="numeric" pattern="[0-9]*" required>
+            <input type="text" maxlength="1" class="otp-box" data-index="2" inputmode="numeric" pattern="[0-9]*" required>
+            <input type="text" maxlength="1" class="otp-box" data-index="3" inputmode="numeric" pattern="[0-9]*" required>
+            <input type="text" maxlength="1" class="otp-box" data-index="4" inputmode="numeric" pattern="[0-9]*" required>
+            <input type="text" maxlength="1" class="otp-box" data-index="5" inputmode="numeric" pattern="[0-9]*" required>
+          </div>
+
+          <div style="margin-top: 24px;">
+            <button type="submit" id="btn-verify-otp" class="btn btn-primary" style="width: 100%;">
+              Verify Email &rarr;
+            </button>
+          </div>
+        </form>
+
+        <div class="resend-container">
+          <div>Didn't receive the code?</div>
+          <div style="margin-top: 6px;">
+            <button type="button" id="btn-resend-otp" class="resend-btn">Resend Code</button>
+            <span id="resend-timer-text" style="color: var(--gray-500); margin-left: 6px;"></span>
+          </div>
+        </div>
+
+        <div class="auth-divider" style="margin: 24px 0 16px 0;">
+          <span>or</span>
+        </div>
+
+        <div class="auth-footer">
+          <a href="register.html" style="color: var(--gray-600); font-size: 0.85rem;">&larr; Back to Registration</a>
+          <div style="margin-top: 10px;">
+            <a href="login.html" style="color: var(--gray-500); font-size: 0.8rem;">Sign in with existing account</a>
+          </div>
+        </div>
+
+        <!-- Developer Diagnostic & Troubleshooting Box -->
+        <div id="otp-diagnostic-box" style="margin-top: 24px; padding: 14px; background: var(--gray-50); border: 1px dashed var(--gray-300); border-radius: var(--radius-md); text-align: left; font-size: 0.78rem; color: var(--gray-600);">
+          <div style="font-weight: 700; color: var(--gray-800); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            <span>ℹ️</span> <span>Troubleshooting Email Delivery</span>
+          </div>
+          <ul style="margin: 0; padding-left: 16px; line-height: 1.5;">
+            <li>Check Spam/Junk folder for your verification email.</li>
+            <li>Default Supabase built-in SMTP allows <strong>3 emails/hour</strong>.</li>
+            <li>Confirm Supabase Email Template includes <code>{{ .Token }}</code> tag under <em>Authentication &rarr; Email Templates &rarr; Confirm signup</em>.</li>
+            <li>Inspect browser console for developer diagnostic logs.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../config/supabase.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/otp.js"></script>
+</body>
+</html>

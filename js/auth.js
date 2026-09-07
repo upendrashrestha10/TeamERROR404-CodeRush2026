@@ -80,6 +80,20 @@ async function protectPage(requiredRole = null) {
   }
 
   const profile = await getUserProfile(session.user.id);
+  const userRole = profile?.role || 'voter';
+
+  // Check email confirmation status for voter role
+  const isOtpPage = window.location.pathname.includes('/auth/otp.html');
+  if (session.user && !session.user.email_confirmed_at && userRole === 'voter' && !isAdminPath) {
+    if (!isOtpPage) {
+      if (session.user.email) {
+        sessionStorage.setItem('pendingVerificationEmail', session.user.email);
+      }
+      window.location.href = isVoterPath ? '../auth/otp.html' : (window.location.pathname.includes('/auth/') ? 'otp.html' : 'auth/otp.html');
+      return null;
+    }
+  }
+
   if (requiredRole && profile && profile.role !== requiredRole) {
     // Role mismatch redirect
     if (requiredRole === 'admin') {
@@ -92,6 +106,7 @@ async function protectPage(requiredRole = null) {
 
   return { session, user: session.user, profile };
 }
+
 
 /**
  * Sign out action
