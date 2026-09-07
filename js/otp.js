@@ -1,18 +1,19 @@
 /**
  * E-CHUNAB - Email OTP Verification (js/otp.js)
- * Fully local/dummy OTP verification for demo environment.
- * Fixed Demo OTP: 273283
+ * Realistic Email OTP Verification Page logic.
+ * Local verification evaluates configuration OTP (273283) silently.
  */
 
 let pendingEmail = '';
+let resendTimer = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('[OTP] Initializing dummy email verification page...');
+  console.log('[OTP] Initializing email verification page...');
 
-  // 0. Ensure Demo Banner Visibility
+  // Ensure Demo Banner elements remain hidden if present
   const demoBanner = document.getElementById('demo-otp-banner');
   if (demoBanner) {
-    demoBanner.style.display = 'block';
+    demoBanner.style.display = 'none';
   }
 
   // 1. Resolve Target Registration Email (from sessionStorage or active Supabase session)
@@ -36,13 +37,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Page Guard: If no registration context exists, redirect to registration (Requirement 27)
+  // Page Guard: If no registration context exists, redirect to registration (Requirement 20)
   if (!pendingEmail) {
-    console.warn('[OTP] Registration session not found.');
     const maskedText = document.getElementById('masked-email-text');
-    if (maskedText) maskedText.textContent = 'Session not found';
+    if (maskedText) maskedText.textContent = 'Session expired';
     if (window.showToast) {
-      showToast('error', 'Session Missing', 'Registration session not found. Please register again.');
+      showToast('error', 'Session Expired', 'Registration session not found. Please register again.');
     }
     setTimeout(() => {
       window.location.href = 'register.html';
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Display masked email in UI
+  // Display masked email in UI (Requirement 3)
   const maskedText = document.getElementById('masked-email-text');
   if (maskedText && pendingEmail) {
     maskedText.textContent = maskEmail(pendingEmail);
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 2. Setup 6-digit OTP Input Box Behaviors
   setupOTPBoxes();
 
-  // 3. Setup Demo OTP Button Handler
+  // 3. Setup Resend Button Handler
   const resendBtn = document.getElementById('btn-resend-otp');
   if (resendBtn) {
     resendBtn.addEventListener('click', handleResendOTP);
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /**
- * Mask Email for UI Privacy
+ * Mask Email for UI Privacy (Requirement 3)
  * e.g., "upendra@gmail.com" -> "u******@gmail.com"
  */
 function maskEmail(email) {
@@ -81,7 +81,7 @@ function maskEmail(email) {
 }
 
 /**
- * Setup 6-digit OTP Input Box Behaviors (Requirement 7)
+ * Setup 6-digit OTP Input Box Behaviors (Requirement 4)
  */
 function setupOTPBoxes() {
   const boxes = document.querySelectorAll('.otp-box');
@@ -138,24 +138,24 @@ function setupOTPBoxes() {
 }
 
 /**
- * Perform Local Dummy OTP Verification (Requirements 4, 8, 9, 10, 11, 12)
- * Fixed OTP: 273283
+ * Verify OTP Token via Local Configuration Comparison (Requirements 6, 7, 13, 22)
  * DOES NOT call Supabase verifyOtp() API.
+ * DOES NOT display or reveal the target OTP.
  */
 async function handleVerifyOTP() {
   const boxes = document.querySelectorAll('.otp-box');
   let token = '';
   boxes.forEach(box => { token += box.value.trim(); });
 
-  // Requirement 10: Check empty or missing input
+  // Requirement 22: Check empty input
   if (!token) {
     if (window.showToast) {
-      showToast('warning', 'Validation', 'Please enter the OTP.');
+      showToast('warning', 'Validation', 'Please enter the verification code.');
     }
     return;
   }
 
-  // Requirement 7: Check 6 digits
+  // Requirement 4 & 22: Check 6 digits
   if (token.length < 6) {
     if (window.showToast) {
       showToast('warning', 'Validation', 'Please enter the full 6-digit verification code.');
@@ -163,11 +163,11 @@ async function handleVerifyOTP() {
     return;
   }
 
-  // Requirement 27 & 12: Check registration session email binding
+  // Requirement 20: Check registration session email binding
   const currentNormalizedEmail = (pendingEmail || '').trim().toLowerCase();
   if (!currentNormalizedEmail) {
     if (window.showToast) {
-      showToast('error', 'Session Missing', 'Registration session not found. Please register again.');
+      showToast('error', 'Session Expired', 'Registration session not found. Please register again.');
     }
     setTimeout(() => { window.location.href = 'register.html'; }, 1500);
     return;
@@ -179,18 +179,17 @@ async function handleVerifyOTP() {
     submitBtn.textContent = 'Verifying...';
   }
 
-  // Configuration fixed OTP value (273283)
+  // Configuration fixed OTP value (273283) evaluated silently
   const expectedOtp = String(
     (window.ECHUNAB_CONFIG && (window.ECHUNAB_CONFIG.DUMMY_OTP || window.ECHUNAB_CONFIG.DEMO_OTP)) || '273283'
   ).trim();
 
   const enteredOtp = token.trim();
 
-  // Requirement 9: Invalid OTP check
+  // Requirement 7 & 22: Invalid OTP check
   if (enteredOtp !== expectedOtp) {
-    console.warn(`[Dummy OTP] Invalid input (${enteredOtp}). Expected: ${expectedOtp}`);
     if (window.showToast) {
-      showToast('error', 'Invalid OTP', 'Invalid OTP. Please enter the correct 6-digit OTP.');
+      showToast('error', 'Verification Failed', 'Invalid verification code. Please try again.');
     }
     if (submitBtn) {
       submitBtn.disabled = false;
@@ -199,16 +198,14 @@ async function handleVerifyOTP() {
     return;
   }
 
-  // Requirement 8 & 11: Success behavior & state storage
-  console.log(`[Dummy OTP] Successful local OTP verification for email: ${currentNormalizedEmail}`);
-
+  // Requirement 6 & 19: Success behavior & local state storage
   sessionStorage.setItem('echunab_dummy_otp_verified', 'true');
   sessionStorage.setItem('echunab_dummy_otp_email', currentNormalizedEmail);
   sessionStorage.setItem('echunab_demo_verified', 'true');
   sessionStorage.setItem('echunab_demo_verified_email', currentNormalizedEmail);
 
   if (window.showToast) {
-    showToast('success', 'Verified', 'Email verification successful.');
+    showToast('success', 'Verified', 'Email verified successfully.');
   }
 
   setTimeout(() => {
@@ -217,29 +214,52 @@ async function handleVerifyOTP() {
 }
 
 /**
- * Handle "Show Demo OTP" button click (Requirement 18)
- * Auto-fills 273283 into boxes for ease of demo testing.
+ * Handle "Resend Code" button click (Requirements 9 & 10)
+ * Does NOT call Supabase resend().
+ * Resets OTP input fields, triggers realistic cooldown timer, and displays neutral confirmation message.
  */
 function handleResendOTP() {
-  const expectedOtp = String(
-    (window.ECHUNAB_CONFIG && (window.ECHUNAB_CONFIG.DUMMY_OTP || window.ECHUNAB_CONFIG.DEMO_OTP)) || '273283'
-  ).trim();
-
   const boxes = document.querySelectorAll('.otp-box');
-  expectedOtp.split('').forEach((digit, idx) => {
-    if (boxes[idx]) {
-      boxes[idx].value = digit;
-      boxes[idx].classList.add('filled');
-    }
+  boxes.forEach(box => {
+    box.value = '';
+    box.classList.remove('filled');
   });
 
-  if (boxes[boxes.length - 1]) {
-    boxes[boxes.length - 1].focus();
-  }
+  if (boxes[0]) boxes[0].focus();
+
+  startResendCooldown(60);
 
   if (window.showToast) {
-    showToast('info', 'Demo OTP', `Demo OTP (${expectedOtp}) applied.`);
+    showToast('info', 'Request Sent', 'A new verification code has been requested.');
   }
+}
+
+/**
+ * Realistic Resend Cooldown Timer (Requirement 10)
+ */
+function startResendCooldown(seconds = 60) {
+  const resendBtn = document.getElementById('btn-resend-otp');
+  const timerText = document.getElementById('resend-timer-text');
+
+  if (!resendBtn) return;
+
+  if (resendTimer) clearInterval(resendTimer);
+
+  let remaining = seconds;
+  resendBtn.disabled = true;
+  if (timerText) timerText.textContent = `(${remaining}s)`;
+
+  resendTimer = setInterval(() => {
+    remaining--;
+    if (remaining > 0) {
+      if (timerText) timerText.textContent = `(${remaining}s)`;
+    } else {
+      clearInterval(resendTimer);
+      resendTimer = null;
+      resendBtn.disabled = false;
+      if (timerText) timerText.textContent = '';
+    }
+  }, 1000);
 }
 
 // Global functions for inline HTML event bindings
