@@ -9,6 +9,18 @@ let resendTimer = null;
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('[OTP] Initializing email verification page...');
 
+  // 0. Manage Demo OTP Banner Visibility
+  const demoBanner = document.getElementById('demo-otp-banner');
+  const isDemoModeEnabled = window.ECHUNAB_CONFIG && window.ECHUNAB_CONFIG.DEMO_OTP_MODE === true;
+  if (demoBanner) {
+    if (isDemoModeEnabled) {
+      demoBanner.style.display = 'block';
+      console.warn('[E-Chunab Security Notice] DEMO_OTP_MODE is ENABLED. Real email verification fallback active for testing.');
+    } else {
+      demoBanner.style.display = 'none';
+    }
+  }
+
   const client = window.getSupabaseClient ? window.getSupabaseClient() : null;
   if (!client) return;
 
@@ -155,8 +167,41 @@ async function handleVerifyOTP() {
     submitBtn.textContent = 'Verifying...';
   }
 
+  // 1. Check if Safe Demo OTP Fallback Mode is explicitly enabled
+  const isDemoMode = window.ECHUNAB_CONFIG && window.ECHUNAB_CONFIG.DEMO_OTP_MODE === true;
+  const demoOTPValue = (window.ECHUNAB_CONFIG && window.ECHUNAB_CONFIG.DEMO_OTP) ? window.ECHUNAB_CONFIG.DEMO_OTP : '273283';
+
+  if (isDemoMode) {
+    if (token === demoOTPValue) {
+      console.log(`[E-Chunab Demo Mode] Demo OTP (${token}) accepted for registration email: ${pendingEmail}`);
+      // Store temporary user-bound demo verification state in sessionStorage
+      sessionStorage.setItem('echunab_demo_verified_email', pendingEmail.toLowerCase());
+      sessionStorage.removeItem('pendingVerificationEmail');
+
+      if (window.showToast) {
+        showToast('success', 'Email Verified (DEMO MODE) ✓', 'Email verification fallback successful! Redirecting to voter verification...');
+      }
+
+      setTimeout(() => {
+        window.location.href = 'verification.html';
+      }, 1200);
+      return;
+    } else {
+      console.warn(`[E-Chunab Demo Mode] Invalid OTP attempt (${token}). Expected Demo OTP: ${demoOTPValue}`);
+      if (window.showToast) {
+        showToast('error', 'Invalid OTP', 'Invalid OTP. Please check the code and try again.');
+      }
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Verify Email →';
+      }
+      return;
+    }
+  }
+
+  // 2. Real Supabase Auth OTP Verification (Primary Mechanism when DEMO_OTP_MODE is false)
   try {
-    console.log(`[Supabase Auth] Verifying OTP token for ${pendingEmail}...`);
+    console.log(`[Supabase Auth] Verifying real OTP token for ${pendingEmail}...`);
 
     const { data, error } = await client.auth.verifyOtp({
       email: pendingEmail,
@@ -181,15 +226,15 @@ async function handleVerifyOTP() {
   } catch (err) {
     console.error('[OTP Verification Error]', err);
 
-    let errorMsg = 'Incorrect verification code. Please check your email and try again.';
+    let errorMsg = 'Invalid OTP. Please check the code and try again.';
     const rawMsg = (err.message || '').toLowerCase();
 
     if (rawMsg.includes('expired')) {
-      errorMsg = 'This verification code has expired. Please request a new code.';
-    } else if (rawMsg.includes('rate limit') || rawMsg.includes('too many')) {
-      errorMsg = 'Too many requests. Please wait before requesting another code.';
+      errorMsg = 'This OTP has expired. Please request a new OTP.';
+    } else if (rawMsg.includes('rate limit') || rawMsg.includes('too many') || rawMsg.includes('over_email_send_rate_limit')) {
+      errorMsg = 'Email OTP could not be sent because the email service is temporarily rate-limited. If Demo Mode is enabled for this development environment, you can use the Demo OTP.';
     } else if (rawMsg.includes('invalid')) {
-      errorMsg = 'Incorrect verification code. Please check your email and try again.';
+      errorMsg = 'Invalid OTP. Please check the code and try again.';
     }
 
     if (window.showToast) {
@@ -210,6 +255,15 @@ async function handleResendOTP() {
   const client = window.getSupabaseClient ? window.getSupabaseClient() : null;
   if (!client || !pendingEmail) {
     if (window.showToast) showToast('warning', 'Notice', 'No target email found for resending code.');
+    return;
+  }
+
+  const isDemoMode = window.ECHUNAB_CONFIG && window.ECHUNAB_CONFIG.DEMO_OTP_MODE === true;
+  if (isDemoMode) {
+    if (window.showToast) {
+      showToast('info', 'DEMO MODE Active', `Demo OTP remains: ${window.ECHUNAB_CONFIG.DEMO_OTP || '273283'}`);
+    }
+    startResendCooldown(60);
     return;
   }
 
@@ -238,8 +292,9 @@ async function handleResendOTP() {
   } catch (err) {
     console.error('[Resend OTP Error]', err);
     let msg = 'Failed to resend verification code.';
-    if ((err.message || '').toLowerCase().includes('rate limit') || (err.message || '').toLowerCase().includes('seconds')) {
-      msg = 'Too many requests. Please wait before requesting another code.';
+    const rawErr = (err.message || '').toLowerCase();
+    if (rawErr.includes('rate limit') || rawErr.includes('over_email_send_rate_limit')) {
+      msg = 'Email OTP could not be sent because the email service is temporarily rate-limited. If Demo Mode is enabled for this development environment, you can use the Demo OTP.';
     }
     if (window.showToast) {
       showToast('error', 'Resend Failed', msg);

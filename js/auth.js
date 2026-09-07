@@ -84,7 +84,11 @@ async function protectPage(requiredRole = null) {
 
   // Check email confirmation status for voter role
   const isOtpPage = window.location.pathname.includes('/auth/otp.html');
-  if (session.user && !session.user.email_confirmed_at && userRole === 'voter' && !isAdminPath) {
+  const isDemoMode = window.ECHUNAB_CONFIG && window.ECHUNAB_CONFIG.DEMO_OTP_MODE === true;
+  const demoVerifiedEmail = sessionStorage.getItem('echunab_demo_verified_email');
+  const isDemoVerified = isDemoMode && demoVerifiedEmail && session.user && session.user.email && (demoVerifiedEmail === session.user.email.toLowerCase());
+
+  if (session.user && !session.user.email_confirmed_at && !isDemoVerified && userRole === 'voter' && !isAdminPath) {
     if (!isOtpPage) {
       if (session.user.email) {
         sessionStorage.setItem('pendingVerificationEmail', session.user.email);

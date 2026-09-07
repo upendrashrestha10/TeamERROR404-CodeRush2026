@@ -5,6 +5,14 @@
  * Public anon client configuration.
  */
 
+// DEVELOPMENT ONLY
+// Keep DEMO_OTP_MODE false for real email OTP verification.
+// Enable only for local/demo testing when real email delivery is unavailable.
+const ECHUNAB_CONFIG = {
+  DEMO_OTP_MODE: false,
+  DEMO_OTP: "273283"
+};
+
 const SUPABASE_URL = "https://qtktqvjfgfotvckxbcqw.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0a3RxdmpmZ2ZvdHZja3hiY3F3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2NjAyMjcsImV4cCI6MjEwNDIzNjIyN30.vzYvzh-7LSA3TfPcY801eYr5Dhblfivd5e-qLT0Fxoc";
 
@@ -56,6 +64,7 @@ function getSupabaseClient() {
 }
 
 // Expose globally for vanilla JS modules
+window.ECHUNAB_CONFIG = ECHUNAB_CONFIG;
 window.SUPABASE_URL = SUPABASE_URL;
 window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
 window.isSupabaseConfigured = isSupabaseConfigured;
