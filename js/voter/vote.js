@@ -271,7 +271,9 @@ function renderBallot() {
           <div class="candidate-grid">
             ${candidates.map(cand => {
               const isSelected = selectedCandidates[pos.id] === cand.id;
-              const photoUrl = cand.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80';
+              const photoUrl = window.getCandidateMediaUrl ? window.getCandidateMediaUrl(cand.photo) : cand.photo;
+              const displayPhotoUrl = photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80';
+              const symbolMarkup = window.renderCandidateSymbol ? window.renderCandidateSymbol(cand.symbol, 'candidate-symbol-img') : window.escapeHTML(cand.symbol);
 
               return `
                 <div class="candidate-card ${isSelected ? 'selected' : ''}" 
@@ -279,11 +281,11 @@ function renderBallot() {
                      data-candidate-id="${cand.id}"
                      onclick="selectCandidate('${pos.id}', '${cand.id}')">
                   <div class="candidate-photo-wrapper">
-                    <img src="${window.escapeHTML(photoUrl)}" alt="${window.escapeHTML(cand.name)}" class="candidate-photo">
+                    <img src="${window.escapeHTML(displayPhotoUrl)}" alt="${window.escapeHTML(cand.name)}" class="candidate-photo">
                   </div>
                   <div class="candidate-name">${window.escapeHTML(cand.name)}</div>
                   <div class="candidate-party">${window.escapeHTML(cand.party)}</div>
-                  <div class="candidate-symbol">${window.escapeHTML(cand.symbol)}</div>
+                  <div class="candidate-symbol">${symbolMarkup}</div>
                   <div class="candidate-bio">${window.escapeHTML(cand.bio || '')}</div>
                   <div class="candidate-radio">
                     <input type="radio" name="pos_${pos.id}" value="${cand.id}" ${isSelected ? 'checked' : ''}>
@@ -344,14 +346,17 @@ function setupReviewAndSubmitHandlers(client) {
 
           if (!cand) return '';
 
+          const symbolMarkup = window.renderCandidateSymbol ? window.renderCandidateSymbol(cand.symbol, 'candidate-symbol-img') : window.escapeHTML(cand.symbol);
+
           return `
             <div class="ballot-review-item">
               <span class="ballot-review-pos">${window.escapeHTML(pos.name)}</span>
-              <span class="ballot-review-cand">${window.escapeHTML(cand.name)} (${window.escapeHTML(cand.symbol)})</span>
+              <span class="ballot-review-cand">${window.escapeHTML(cand.name)} ${symbolMarkup}</span>
             </div>
           `;
         }).filter(Boolean).join('');
       }
+
 
       if (window.openModal) {
         window.openModal('review-vote-modal');

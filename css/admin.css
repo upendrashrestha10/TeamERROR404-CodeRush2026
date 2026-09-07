@@ -350,4 +350,99 @@
   }
 }
 
+/* Media Upload Components (Electoral Symbol & Candidate Photo) */
+.upload-dropzone {
+  border: 2px dashed var(--gray-300);
+  border-radius: var(--radius-md);
+  padding: 20px 16px;
+  text-align: center;
+  background: var(--gray-50);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.upload-dropzone:hover,
+.upload-dropzone.dragover {
+  border-color: var(--primary-500);
+  background: var(--primary-50);
+}
+
+.upload-icon-placeholder {
+  font-size: 2.2rem;
+  margin-bottom: 6px;
+  color: var(--gray-400);
+  line-height: 1;
+}
+
+.upload-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.upload-hint {
+  font-size: 0.78rem;
+  color: var(--gray-500);
+  margin-top: 4px;
+}
+
+.upload-preview-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-top: 8px;
+}
+
+.upload-preview-img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+}
+
+.upload-file-info {
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.upload-file-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upload-file-size {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  margin-top: 2px;
+}
+
+.candidate-symbol-preview {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  padding: 2px;
+  cursor: zoom-in;
+  transition: transform 0.2s ease;
+  vertical-align: middle;
+}
+
+.candidate-symbol-preview:hover {
+  transform: scale(1.08);
+}
+
+
 

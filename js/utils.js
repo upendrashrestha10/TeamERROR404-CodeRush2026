@@ -137,6 +137,30 @@ function initMobileSidebar() {
   }
 }
 
+// Candidate Media Utilities
+function getCandidateMediaUrl(pathOrUrl) {
+  if (!pathOrUrl) return '';
+  if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://') || pathOrUrl.startsWith('data:')) {
+    return pathOrUrl;
+  }
+  const client = window.getSupabaseClient ? window.getSupabaseClient() : null;
+  if (!client) return pathOrUrl;
+  const { data } = client.storage.from('candidate-media').getPublicUrl(pathOrUrl);
+  return data ? data.publicUrl : pathOrUrl;
+}
+
+function renderCandidateSymbol(symbol, extraClass = 'candidate-symbol-img') {
+  if (!symbol) return '';
+  const mediaUrl = getCandidateMediaUrl(symbol);
+  const isImage = (symbol.includes('/') || symbol.includes('.') || symbol.startsWith('http')) &&
+                  !symbol.includes('🕊️') && !symbol.includes('☀️') && !symbol.includes('🌲') &&
+                  !symbol.includes('⚖️') && !symbol.includes('📖') && !symbol.includes('🔔');
+  if (isImage) {
+    return `<img src="${escapeHTML(mediaUrl)}" alt="Electoral Symbol" class="${escapeHTML(extraClass)}">`;
+  }
+  return `<span class="candidate-symbol-legacy">${escapeHTML(symbol)}</span>`;
+}
+
 // Automatically init responsive sidebar on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
   initMobileSidebar();
@@ -150,5 +174,8 @@ window.closeModal = closeModal;
 window.formatDateTime = formatDateTime;
 window.formatDate = formatDate;
 window.initMobileSidebar = initMobileSidebar;
+window.getCandidateMediaUrl = getCandidateMediaUrl;
+window.renderCandidateSymbol = renderCandidateSymbol;
 window.$ = $;
 window.$$ = $$;
+

@@ -194,4 +194,16 @@
   font-weight: 700;
   font-size: 0.95rem;
   color: var(--primary-700);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
+
+.candidate-symbol-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  vertical-align: middle;
+  border-radius: var(--radius-sm);
+}
+
